@@ -1,0 +1,25 @@
+[llms.txt]
+version=1.0
+title=Knowrite Novel Writing Frontend
+summary=React + Vite 前端界面，配套 knowrite 小说创作引擎。提供多 Agent 写作流程可视化、Fitness 质量评分看板、世界观管理、Prompt 实验界面。
+keywords=react, vite, ai-fiction, novel-writing-ui, knowrite, llm-frontend, creative-writing-tool, story-generator, fitness-dashboard
+license=MIT
+author=Knowrite Contributors
+repository=https://github.com/xxx/knowrite-ui
+documentation=https://github.com/xxx/knowrite-ui/blob/main/README.md
+api=https://github.com/xxx/knowrite/blob/main/README.md
+examples=https://github.com/xxx/knowrite-ui/tree/main/src/pages
+backend=https://github.com/xxx/knowrite
+
+[description]
+knowrite 小说创作工作台的前端层，基于 React 19 + Vite 6 + Tailwind CSS v4 构建。
+支持多 Agent 写作流程实时可视化（Writer / Editor / Reader / Summarizer 等 7 个 Agent 的 SSE 流式输出）、
+Fitness 质量评分看板、世界观记忆库可视化编辑（人物/剧情线/地图/lore）、Prompt 模板管理与进化实验。
+通过标准 HTTP / SSE 连接后端 API，后端提供 OpenAI-compatible 接口和多 Agent 写作流水线。
+
+[files]
+README.md=项目介绍、快速开始、API 对接文档
+src/api/novel.js=后端 API 封装（fetch / SSE）
+src/pages/=页面组件（作品列表、创作、设置、世界观等）
+src/components/=可复用 UI 组件和面板
+vite.config.js=Vite 构建配置
