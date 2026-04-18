@@ -1,0 +1,45 @@
+import { Badge } from './ui/Badge';
+import { BookOpen, ArrowRight } from 'lucide-react';
+
+export function WorkCard({ work, onClick }) {
+  let strategyLabel = 'Single';
+  let variant = 'default';
+  if (work.strategy === 'knowrite') { strategyLabel = '多Agent'; variant = 'info'; }
+  else if (work.strategy === 'pipeline') { strategyLabel = 'Pipeline'; variant = 'primary'; }
+  else if (work.strategy && (work.strategy.includes('multivolume') || work.strategy === 'mv')) {
+    strategyLabel = '多卷' + (work.strategy.includes('knowrite') ? '·多Agent' : '');
+    variant = 'info';
+  }
+
+  const timeStr = work.updatedAt
+    ? new Date(work.updatedAt).toLocaleDateString('zh-CN', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })
+    : '';
+
+  return (
+    <div
+      onClick={onClick}
+      className="group flex items-start gap-4 p-4 rounded-xl bg-slate-800/40 border border-slate-700/40 hover:border-sky-500/40 hover:bg-slate-800/70 hover:-translate-y-0.5 hover:shadow-lg transition-all duration-200 cursor-pointer"
+    >
+      <div className="w-11 h-11 rounded-xl bg-slate-700/40 border border-slate-600/30 flex items-center justify-center shrink-0 group-hover:bg-sky-500/10 group-hover:border-sky-500/20 transition">
+        <BookOpen size={20} className="text-slate-500 group-hover:text-sky-400 transition" />
+      </div>
+      <div className="flex-1 min-w-0">
+        <div className="text-[15px] font-semibold text-slate-100 truncate mb-1 group-hover:text-sky-400 transition">
+          {work.title ? `《${work.title}》` : '未命名作品'}
+        </div>
+        <div className="text-slate-500 text-xs line-clamp-2 mb-2.5 leading-relaxed">
+          {work.desc || work.rawTopic || '暂无描述'}
+        </div>
+        <div className="flex flex-wrap items-center gap-1.5">
+          <Badge variant="default" size="sm">{work.style || '默认'}</Badge>
+          <Badge variant={variant} size="sm">{strategyLabel}</Badge>
+          <Badge variant="purple" size="sm">{work.chapterCount || 0} 章</Badge>
+          {timeStr && <span className="text-[10px] text-slate-600 ml-1">{timeStr}</span>}
+        </div>
+      </div>
+      <div className="self-center text-slate-600 group-hover:text-sky-400 transition">
+        <ArrowRight size={16} />
+      </div>
+    </div>
+  );
+}
