@@ -1,0 +1,408 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>knowrite 小说创作工作台 · 使用指南 | AI 辅助长篇小说创作流程说明</title>
+  <meta name="description" content="knowrite 小说创作工作台的详细使用指南，介绍多 Agent 写作流水线、Fitness 质量评估体系、工业风/自由风双模式、世界观管理等功能。" />
+  <meta name="keywords" content="AI小说创作指南,多Agent写作教程,Fitness评分,创意写作工具,LLM小说生成" />
+  <meta name="author" content="Knowrite Contributors" />
+  <meta name="robots" content="index, follow" />
+  <style>
+    :root {
+      --bg: #0f172a;
+      --surface: #1e293b;
+      --surface-light: #334155;
+      --text: #f8fafc;
+      --text-secondary: #94a3b8;
+      --primary: #38bdf8;
+      --accent: #818cf8;
+      --success: #34d399;
+      --warning: #fbbf24;
+      --danger: #f87171;
+      --border: #334155;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "PingFang SC", "Microsoft YaHei", sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.7;
+    }
+    .container { max-width: 960px; margin: 0 auto; padding: 2rem 1rem; }
+    h1 { text-align: center; font-size: 1.8rem; margin-bottom: 0.5rem; }
+    .subtitle { text-align: center; color: var(--text-secondary); margin-bottom: 2rem; }
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 0.8rem;
+      padding: 1.5rem;
+      margin-bottom: 1.5rem;
+    }
+    .card h2 { margin-top: 0; font-size: 1.3rem; display: flex; align-items: center; gap: 0.5rem; }
+    .card h2 .icon { font-size: 1.5rem; }
+    .card h3 { font-size: 1.05rem; color: var(--primary); margin-top: 1.2rem; margin-bottom: 0.5rem; }
+    .card p { margin: 0.8rem 0; }
+    .card ul, .card ol { padding-left: 1.5rem; }
+    .card li { margin: 0.5rem 0; }
+    .card li > code { background: rgba(56,189,248,0.1); padding: 0.1rem 0.4rem; border-radius: 0.3rem; font-size: 0.85em; }
+    .quote {
+      border-left: 4px solid var(--primary);
+      padding-left: 1rem;
+      margin: 1rem 0;
+      color: var(--text-secondary);
+      font-style: italic;
+    }
+    .tag {
+      display: inline-block;
+      padding: 0.2rem 0.6rem;
+      border-radius: 999px;
+      font-size: 0.8rem;
+      background: var(--surface-light);
+      margin-right: 0.4rem;
+      margin-bottom: 0.3rem;
+    }
+    .tag-primary { background: rgba(56,189,248,0.15); color: var(--primary); }
+    .tag-success { background: rgba(52,211,153,0.15); color: var(--success); }
+    .tag-warning { background: rgba(251,191,36,0.15); color: var(--warning); }
+    .tag-danger { background: rgba(248,113,113,0.15); color: var(--danger); }
+    .nav { text-align: center; margin-bottom: 2rem; }
+    .nav a {
+      color: var(--primary);
+      text-decoration: none;
+      padding: 0.5rem 1rem;
+      border: 1px solid var(--primary);
+      border-radius: 0.5rem;
+      display: inline-block;
+    }
+    .nav a:hover { background: rgba(56,189,248,0.1); }
+    .section-title { color: var(--accent); font-weight: bold; margin-top: 1.2rem; }
+    .toc { background: var(--surface); border: 1px solid var(--border); border-radius: 0.8rem; padding: 1.2rem 1.5rem; margin-bottom: 2rem; }
+    .toc h3 { margin-top: 0; color: var(--primary); font-size: 1.1rem; }
+    .toc ul { padding-left: 1.2rem; margin: 0.5rem 0; }
+    .toc a { color: var(--text-secondary); text-decoration: none; }
+    .toc a:hover { color: var(--primary); }
+    .hint { background: rgba(56,189,248,0.08); border: 1px solid rgba(56,189,248,0.2); border-radius: 0.5rem; padding: 0.8rem 1rem; margin: 0.8rem 0; font-size: 0.9rem; }
+    .hint code { background: rgba(56,189,248,0.1); padding: 0.1rem 0.3rem; border-radius: 0.2rem; }
+    table { width: 100%; border-collapse: collapse; margin: 1rem 0; font-size: 0.9rem; }
+    th, td { padding: 0.6rem 0.8rem; text-align: left; border-bottom: 1px solid var(--border); }
+    th { color: var(--text-secondary); font-weight: 500; }
+    code { font-family: "SF Mono", "Fira Code", monospace; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="nav">
+      <a href="/">← 返回小说创作台</a>
+    </div>
+
+    <h1>knowrite 小说创作工作台</h1>
+    <div class="subtitle">使用指南 · 从入门到精通</div>
+
+    <!-- 目录 -->
+    <div class="toc">
+      <h3>📑 目录</h3>
+      <ul>
+        <li><a href="#overview">系统概览</a></li>
+        <li><a href="#quickstart">快速开始：3步写小说</a></li>
+        <li><a href="#modes">工业风 vs 自由风：选择你的创作模式</a></li>
+        <li><a href="#settings">系统设置详解</a>
+          <ul>
+            <li><a href="#settings-skill">写作技能 & 评审维度</a></li>
+            <li><a href="#settings-chapter">章节字数配置</a></li>
+            <li><a href="#settings-models">模型配置（含轮换）</a></li>
+          </ul>
+        </li>
+        <li><a href="#world">创作辅助：世界观、人物、剧情线、地图</a></li>
+        <li><a href="#templates">套路模板库</a></li>
+        <li><a href="#tools">工具页面：Agent 聊天 & Prompt 进化</a></li>
+        <li><a href="#verify">如何验证功能是否生效</a></li>
+        <li><a href="#quality">附录：什么样的小说才是好小说？</a></li>
+      </ul>
+    </div>
+
+    <!-- 系统概览 -->
+    <div class="card" id="overview">
+      <h2><span class="icon">🚀</span> 系统概览</h2>
+      <p>这是一个基于多 Agent 协作的 AI 小说创作系统。核心思路是<strong>让每个 Agent 只干一件事</strong>，把创作流程拆解为专业分工：</p>
+      <ul>
+        <li><strong>策划（Planner）</strong>：根据主题生成大纲</li>
+        <li><strong>作者（Writer）</strong>：按大纲撰写章节初稿</li>
+        <li><strong>编辑（Editor）</strong>：按评审维度审查并给出修改意见</li>
+        <li><strong>去AI化（Humanizer）</strong>：消除 AI 腔调，增加人味</li>
+        <li><strong>校编（Proofreader）</strong>：修正语病、错别字、标点</li>
+        <li><strong>读者（Reader）</strong>：从读者视角给出可读性评分和反馈</li>
+        <li><strong>摘要（Summarizer）</strong>：生成章节摘要，为后续章节提供上下文</li>
+      </ul>
+      <div class="hint">
+        💡 你可以在「设置 → 模型配置」中为每个角色独立配置模型和温度，甚至让多个作者模型<strong>轮换写作</strong>，实现风格交替。
+      </div>
+    </div>
+
+    <!-- 快速开始 -->
+    <div class="card" id="quickstart">
+      <h2><span class="icon">⚡</span> 快速开始：3步写小说</h2>
+      <h3>Step 1：写下你的想法</h3>
+      <p>在「开始创作」页面输入小说主题。没有灵感？点击下方的灵感标签（退婚逆袭、系统觉醒、重生复仇等）快速填充。</p>
+
+      <h3>Step 2：选择风格</h3>
+      <ul>
+        <li><strong>发布平台</strong>：番茄、起点、晋江、七猫、飞卢等 10 个平台，每个都有独特的读者群体和文风偏好</li>
+        <li><strong>作者风格</strong>：热血磅礴、少年逆袭、体系严谨、深情宿命等 80 种风格，决定小说的整体调性</li>
+        <li><strong>生成模式</strong>：快速模式（1-2分钟）或精品模式（5-15分钟，多轮精修）</li>
+        <li><strong>写作风格</strong>：工业风（严格量产）或自由风（创意探索）</li>
+      </ul>
+
+      <h3>Step 3：开始创作</h3>
+      <p>点击「开始创作」按钮，系统会自动完成：大纲生成 → 卷规划 → 章节写作 → 多轮审修 → 读者反馈 → 摘要生成。你可以在页面上实时看到每一步的进度和使用的模型。</p>
+
+      <div class="hint">
+        💡 创作完成后，进入「我的作品」可以查看作品详情、续写下一章、管理创作辅助数据，或导出完整小说文本。
+      </div>
+    </div>
+
+    <!-- 双模式 -->
+    <div class="card" id="modes">
+      <h2><span class="icon">🎭</span> 工业风 vs 自由风：选择你的创作模式</h2>
+      <table>
+        <thead>
+          <tr><th>维度</th><th>工业风（默认）</th><th>自由风</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>创作规则</td><td>8条严格规则（钩子、悬念、画面感、情感冲击等）</td><td>2条底线（吸引力 + 人物一致性）</td></tr>
+          <tr><td>大纲约束</td><td>严格依据大纲，禁止偏离</td><td>大纲为参考，允许偏离和即兴</td></tr>
+          <tr><td>字数控制</td><td>严格（目标 ± 容忍区间）</td><td>建议性（约 X 字）</td></td></tr>
+          <tr><td>编辑轮数</td><td>最多 3 轮</td><td>仅 1 轮轻量检查</td></tr>
+          <tr><td>校编/润色</td><td>完整校编 + 润色</td><td>跳过校编，轻度润色</td></tr>
+          <tr><td>去AI化</td><td>重度（消除所有 AI 痕迹）</td><td>轻度（删除明显套话即可）</td></tr>
+          <tr><td>Fitness 字数权重</td><td>0.15</td><td>0.05</td></tr>
+          <tr><td>适合场景</td><td>量产网文、追求稳定质量</td><td>灵感驱动、探索性写作</td></tr>
+        </tbody>
+      </table>
+      <div class="hint">
+        💡 你可以在「设置 → 写作风格」中设置系统默认模式。创建作品时也可以单独覆盖，让不同作品使用不同模式。
+      </div>
+    </div>
+
+    <!-- 系统设置详解 -->
+    <div class="card" id="settings">
+      <h2><span class="icon">⚙️</span> 系统设置详解</h2>
+      <p>设置页共 7 个 Tab，每个都影响创作行为的某个方面。</p>
+
+      <h3 id="settings-skill">写作技能 & 评审维度</h3>
+      <p><strong>写作技能</strong>会注入到作家 Prompt 中，作为创作规范。系统预设三套：</p>
+      <ul>
+        <li><span class="tag tag-primary">8 维</span>精简版：钩子、爽点、人设、情绪、画面、节奏、语言</li>
+        <li><span class="tag tag-primary">15 维</span>标准版：增加期待感、代入感、情节价值、逻辑自洽、对话质量、创新度</li>
+        <li><span class="tag tag-primary">33 维</span>完整版：涵盖开篇结构、人物塑造、情节叙事、情绪节奏、文笔语言、世界观、商业价值七大板块</li>
+      </ul>
+      <p><strong>评审维度</strong>用于编辑审稿阶段。编辑会逐一检查每个维度是否达标，给出「通过/不通过」结论。维度数量越多，审稿越严格。</p>
+      <div class="hint">
+        💡 你可以在设置页直接编辑 skill 文本和维度列表。切换预设时，系统会自动保存当前编辑内容到对应预设槽位，三套数据互不干扰。
+      </div>
+
+      <h3 id="settings-chapter">章节字数配置</h3>
+      <p>控制每章的目标字数和容忍区间：</p>
+      <ul>
+        <li><code>targetWords</code>：目标字数（默认 2000）</li>
+        <li><code>minWords / maxWords</code>：常规容忍区间（默认 1800-2200）</li>
+        <li><code>absoluteMin / absoluteMax</code>：绝对硬边界（默认 1600-2500）</li>
+      </ul>
+      <p>这些配置同时影响：</p>
+      <ol>
+        <li>Prompt 模板中的字数要求变量（<code>{{targetWords}}</code> 等）</li>
+        <li>Fitness 评估中的字数得分计算</li>
+        <li>导入作品时的章节切分策略</li>
+      </ol>
+
+      <h3 id="settings-models">模型配置</h3>
+      <p>这是整个系统最核心的设置，决定每个 Agent 用什么模型、什么温度生成内容。</p>
+
+      <div class="section-title">Provider 配置</div>
+      <p>系统支持 5 种 Provider：</p>
+      <table>
+        <thead>
+          <tr><th>Provider</th><th>类型</th><th>说明</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>yuanbao</td><td>原生 API</td><td>腾讯元宝，直接调用 API</td></tr>
+          <tr><td>doubao</td><td>浏览器自动化</td><td>豆包，需要打开豆包网页并登录</td></tr>
+          <tr><td>qwen</td><td>浏览器自动化</td><td>通义千问，需要打开千问网页并登录</td></tr>
+          <tr><td>kimi</td><td>浏览器自动化</td><td>Kimi，需要打开 Kimi 网页并登录</td></tr>
+          <tr><td>openai</td><td>兼容 API</td><td>OpenAI / 百炼 / MiniMax / DeepSeek 等兼容接口</td></tr>
+        </tbody>
+      </table>
+      <p>每个 Provider 需配置：别名、BaseURL、API Key、可用模型列表。</p>
+
+      <div class="section-title">作者轮换模型 ⭐</div>
+      <p>启用后，系统会按章节号循环切换 writer 模型：</p>
+      <ul>
+        <li>第 1 章 → 列表第 1 个模型</li>
+        <li>第 2 章 → 列表第 2 个模型</li>
+        <li>第 N 章 → <code>(N-1) % 模型数量</code></li>
+      </ul>
+      <p>轮换只影响 <strong>writer（作者）</strong>角色，包括初稿写作和改稿修订。同一章内的初稿和改稿使用同一模型，保证风格一致。</p>
+      <p>默认配置（未启用）：</p>
+      <ul>
+        <li>作家A：yuanbao / deepseek-v3 / T=0.85</li>
+        <li>作家B：yuanbao / deepseek-r1 / T=0.85</li>
+      </ul>
+
+      <div class="section-title">角色默认模型与温度</div>
+      <p>19 个角色，每个可独立配置 Provider + 模型 + 温度：</p>
+      <table>
+        <thead>
+          <tr><th>角色</th><th>用途</th><th>建议温度</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>作者（初稿）</td><td>writer 写初稿</td><td>0.8~0.9</td></tr>
+          <tr><td>编辑（改稿）</td><td>editor 审阅修改</td><td>0.8~0.9</td></tr>
+          <tr><td>去AI化</td><td>humanizer 风格化</td><td>0.8~0.9</td></tr>
+          <tr><td>校编</td><td>proofreader 校对（工业风）</td><td>0.2</td></tr>
+          <tr><td>润色</td><td>polish 润色（pipeline）</td><td>0.8</td></tr>
+          <tr><td>读者反馈</td><td>reader 评分</td><td>0</td></tr>
+          <tr><td>摘要生成</td><td>summarizer 生成摘要</td><td>0</td></tr>
+          <tr><td>大纲生成</td><td>outline 生成大纲</td><td>0.2</td></tr>
+          <tr><td>偏离检测</td><td>deviationCheck 检测偏离</td><td>0</td></tr>
+          <tr><td>风格修正</td><td>styleCorrect 矫正风格</td><td>0.3</td></tr>
+          <tr><td>重复修复</td><td>repetitionRepair 修复重复</td><td>0.2</td></tr>
+          <tr><td>Fitness评估</td><td>fitnessEvaluate 质量评分</td><td>0</td></tr>
+        </tbody>
+      </table>
+      <div class="hint">
+        💡 <strong>温度最佳实践</strong>：创作类角色（作者、编辑、润色）建议 0.8~0.9，更有创意；审核/评审/结构类角色建议 0~0.3，降低幻觉、提高稳定性。点击「应用最佳实践温度」可一键套用推荐值。
+      </div>
+    </div>
+
+    <!-- 创作辅助 -->
+    <div class="card" id="world">
+      <h2><span class="icon">🗺️</span> 创作辅助：世界观、人物、剧情线、地图</h2>
+      <p>在「我的作品」中选择一个作品，进入详情页，切换到「创作辅助」Tab，可以使用以下功能：</p>
+
+      <h3>世界观记忆库</h3>
+      <p>记录作品的设定信息：力量体系、势力分布、历史背景、特殊规则等。支持分类、标签、重要性标记。写作时系统会自动将相关内容注入 Prompt。</p>
+
+      <h3>人物设定</h3>
+      <p>创建角色卡片：姓名、别名、角色类型（主角/反派/配角）、状态、外貌、性格、目标、背景故事。支持人物关系图谱，可视化展示角色间的关联。</p>
+
+      <h3>剧情线图谱</h3>
+      <p>为每条剧情线（主线/支线/暗线）创建时间轴节点，标注每章发生的关键事件。支持颜色标记和展开/折叠，方便追踪多线叙事。</p>
+
+      <h3>地图图谱</h3>
+      <p>构建作品的世界地图：区域划分、层级关系、区域间的连接（道路/传送阵/海域等）和旅行时间。适合世界观宏大的作品。</p>
+
+      <div class="hint">
+        💡 创作辅助数据<strong>自动注入</strong>到所有 outline 和 writing Prompt 中。你不需要手动复制粘贴，系统会在写作时自动提取相关内容。数据越多，AI 对作品世界的理解越深入。
+      </div>
+    </div>
+
+    <!-- 套路模板 -->
+    <div class="card" id="templates">
+      <h2><span class="icon">📐</span> 套路模板库</h2>
+      <p>系统内置 5 种经典网文套路模板：退婚流、系统流、种田流、凡人流、签到流。每种模板包含：</p>
+      <ul>
+        <li><strong>节拍结构</strong>：从开局到完结的阶段性目标，每阶段预计章节数</li>
+        <li><strong>代表作</strong>：参考作品，帮助理解套路特征</li>
+        <li><strong>标签</strong>：方便检索和分类</li>
+      </ul>
+      <p>你可以在「套路模板库」页面创建自定义模板，也可以在作品详情页将模板关联到具体作品。关联后，模板内容会自动注入写作 Prompt。</p>
+    </div>
+
+    <!-- 工具页面 -->
+    <div class="card" id="tools">
+      <h2><span class="icon">🛠️</span> 工具页面</h2>
+
+      <h3>Agent 聊天</h3>
+      <p>一个轻量化的 AI 对话页面，支持：</p>
+      <ul>
+        <li>选择任意 Provider 和模型</li>
+        <li>加载任意 Prompt 模板作为系统提示</li>
+        <li>多轮对话，支持 SSE 流式输出</li>
+        <li>温度调节（0~2）</li>
+      </ul>
+      <p>适合快速测试 Prompt、调试模型输出、或进行与创作相关的自由对话。对话内容<strong>不保存</strong>，刷新即丢失。</p>
+
+      <h3>Prompt 自动进化</h3>
+      <p>基于历史作品的 Fitness 数据，自动诊断 Prompt 缺陷并生成改进变体。系统会：</p>
+      <ol>
+        <li>分析低 Fitness 章节的共同问题</li>
+        <li>生成多个 Prompt 改进版本</li>
+        <li>用历史数据预测每个版本的 Fitness 提升幅度</li>
+        <li>推荐是否应用改进版本</li>
+      </ol>
+    </div>
+
+    <!-- 验证方法 -->
+    <div class="card" id="verify">
+      <h2><span class="icon">✅</span> 如何验证功能是否生效</h2>
+
+      <h3>验证写作技能是否生效</h3>
+      <ol>
+        <li>进入「设置 → 技能」，在 skill 文本开头加一句明显的话，如 <code>【测试标记】这是自定义技能</code></li>
+        <li>保存设置</li>
+        <li>开始创作一章</li>
+        <li>查看 <code>works/&lt;workId&gt;/chapter_X_prompt.txt</code>，搜索「测试标记」——出现即生效</li>
+      </ol>
+
+      <h3>验证评审维度是否生效</h3>
+      <ol>
+        <li>切换评审预设（8/15/33 维）</li>
+        <li>写一章</li>
+        <li>查看 <code>works/&lt;workId&gt;/chapter_X_edit_prompt.txt</code></li>
+        <li>确认编辑 Prompt 中的维度清单数量与预设一致</li>
+      </ol>
+
+      <h3>验证模型轮换是否生效</h3>
+      <ol>
+        <li>进入「设置 → 模型配置」，启用「作者轮换模型」</li>
+        <li>配置至少 2 个不同的轮换模型（如 deepseek-v3 和 deepseek-r1）</li>
+        <li>保存设置</li>
+        <li>连续写两章</li>
+        <li>观察前端步骤进度条中的模型名：第 1 章和第 2 章应该显示不同的模型</li>
+        <li>或检查数据库：<code>SELECT number, models FROM chapters WHERE workId = '...'</code></li>
+      </ol>
+
+      <h3>验证创作辅助是否注入</h3>
+      <ol>
+        <li>在「我的作品 → 创作辅助」中添加几条世界观设定和人物</li>
+        <li>续写下一章</li>
+        <li>查看 <code>works/&lt;workId&gt;/chapter_X_prompt.txt</code></li>
+        <li>确认 Prompt 末尾包含「世界观上下文」区块，且内容正确</li>
+      </ol>
+    </div>
+
+    <!-- 附录：好小说标准 -->
+    <div class="card" id="quality">
+      <h2><span class="icon">🎯</span> 附录：什么样的小说才是好小说？</h2>
+      <p>以下是六维视角的解读，供创作时参考：</p>
+
+      <div class="section-title">📐 编辑视角：结构、节奏与市场</div>
+      <p>黄金三章、人物行动驱动情节、节奏如心电图、伏笔闭环、符合平台调性。</p>
+
+      <div class="section-title">✍️ 作者视角：表达、共情与生命力</div>
+      <p>真诚比技巧重要、独特的声音、让角色自己活下去、细节即真实、写你想读的书。</p>
+
+      <div class="section-title">📖 读者视角：沉浸、爽感与陪伴</div>
+      <p>沉浸感第一、主角值得被喜欢、情绪价值到位、期待感是追更动力、成为精神陪伴。</p>
+
+      <div class="section-title">📊 平台算法视角：数据、留存与分发</div>
+      <p>完读率第一、追更率决定天花板、标签匹配、互动数据放大、适配滑动习惯。</p>
+
+      <div class="section-title">📚 出版人视角：IP 价值与全版权运营</div>
+      <p>世界观可延展、角色符号化、情感母题普适、视觉化场景丰富、长生命周期。</p>
+
+      <div class="section-title">🎬 编剧视角：冲突、视觉与改编友好度</div>
+      <p>每章强冲突、场景集中、高光可截图、情绪曲线清晰、金句与名场面。</p>
+
+      <div class="quote" style="margin-top:1.5rem;">
+        好小说 = 扎实的情节 × 真诚的情感 × 难忘的陪伴感 × 算法友好 × 改编潜力 × 长尾价值
+      </div>
+    </div>
+
+    <div class="nav" style="margin-top:2rem;">
+      <a href="/">← 返回小说创作台</a>
+    </div>
+  </div>
+</body>
+</html>

@@ -1,0 +1,11 @@
+User-agent: *
+Allow: /
+
+# AI crawlers welcome
+User-agent: ChatGPT-User
+User-agent: Claude-Web
+User-agent: PerplexityBot
+User-agent: GPTBot
+Allow: /
+
+Sitemap: https://github.com/xxx/knowrite-ui
