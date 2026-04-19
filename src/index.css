@@ -72,6 +72,69 @@ body {
   border-radius: 0 2px 2px 0;
 }
 
+/* Markdown rendering styles for dark theme */
+.markdown-body h1,
+.markdown-body h2,
+.markdown-body h3,
+.markdown-body h4 {
+  font-weight: 600;
+  margin: 0.75rem 0 0.5rem;
+  color: #e2e8f0;
+}
+.markdown-body h1 { font-size: 1.125rem; }
+.markdown-body h2 { font-size: 1rem; }
+.markdown-body h3 { font-size: 0.875rem; }
+.markdown-body p {
+  margin: 0.4rem 0;
+  line-height: 1.6;
+}
+.markdown-body strong {
+  font-weight: 600;
+  color: #f1f5f9;
+}
+.markdown-body em {
+  font-style: italic;
+  color: #cbd5e1;
+}
+.markdown-body ul,
+.markdown-body ol {
+  margin: 0.4rem 0;
+  padding-left: 1.25rem;
+}
+.markdown-body li {
+  margin: 0.15rem 0;
+}
+.markdown-body code {
+  background: #1e293b;
+  padding: 0.1rem 0.35rem;
+  border-radius: 0.25rem;
+  font-size: 0.85em;
+  color: #7dd3fc;
+}
+.markdown-body pre {
+  background: #0f172a;
+  padding: 0.5rem 0.75rem;
+  border-radius: 0.5rem;
+  overflow-x: auto;
+  margin: 0.5rem 0;
+}
+.markdown-body pre code {
+  background: transparent;
+  padding: 0;
+  color: #e2e8f0;
+}
+.markdown-body blockquote {
+  border-left: 3px solid #334155;
+  padding-left: 0.75rem;
+  margin: 0.5rem 0;
+  color: #94a3b8;
+}
+.markdown-body hr {
+  border: none;
+  border-top: 1px solid #334155;
+  margin: 0.75rem 0;
+}
+
 @media (max-width: 1024px) {
   .nav-item.active::before {
     display: none;

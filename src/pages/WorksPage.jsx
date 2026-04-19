@@ -14,6 +14,7 @@ import { Tooltip } from '../components/ui/Tooltip';
 import { useWork } from '../contexts/WorkContext';
 import * as api from '../api/novel';
 import { WorldLorePanel } from '../components/world/WorldLorePanel';
+import MarkdownRenderer from '../components/MarkdownRenderer';
 import { CharacterPanel } from '../components/world/CharacterPanel';
 import { PlotLinePanel } from '../components/world/PlotLinePanel';
 import { MapPanel } from '../components/world/MapPanel';
@@ -329,8 +330,8 @@ export function WorksPage() {
                   </button>
                   {openSections.theme && (
                     <div className="px-4 pb-4">
-                      <div className="text-sm text-slate-300 whitespace-pre-wrap leading-relaxed max-h-[400px] overflow-y-auto">
-                        {info?.outlineTheme || '暂无简介大纲'}
+                      <div className="text-sm text-slate-300 leading-relaxed max-h-[400px] overflow-y-auto">
+                        <MarkdownRenderer text={info?.outlineTheme || '暂无简介大纲'} />
                       </div>
                     </div>
                   )}
@@ -364,7 +365,7 @@ export function WorksPage() {
                               </button>
                               {isOpen && (
                                 <div className="px-3 pb-3 pl-8">
-                                  <div className="text-xs text-slate-400 whitespace-pre-wrap leading-relaxed">{ch.content.join('\n')}</div>
+                                  <div className="text-xs text-slate-400 leading-relaxed"><MarkdownRenderer text={ch.content.join('\n')} /></div>
                                 </div>
                               )}
                             </div>
@@ -412,8 +413,8 @@ export function WorksPage() {
                                     </button>
                                     {isOpen && text && (
                                       <div className="px-2 pb-2 pl-7">
-                                        <div className="text-xs text-slate-400 whitespace-pre-wrap leading-relaxed max-h-[300px] overflow-y-auto bg-slate-950/30 rounded p-2 border border-slate-800/30">
-                                          {text}
+                                        <div className="text-xs text-slate-400 leading-relaxed max-h-[300px] overflow-y-auto bg-slate-950/30 rounded p-2 border border-slate-800/30">
+                                          <MarkdownRenderer text={text} />
                                         </div>
                                       </div>
                                     )}
@@ -438,8 +439,8 @@ export function WorksPage() {
                               </button>
                               {isOpen && text && (
                                 <div className="px-3 pb-3 pl-8">
-                                  <div className="text-xs text-slate-400 whitespace-pre-wrap leading-relaxed max-h-[300px] overflow-y-auto bg-slate-950/30 rounded p-2 border border-slate-800/30">
-                                    {text}
+                                  <div className="text-xs text-slate-400 leading-relaxed max-h-[300px] overflow-y-auto bg-slate-950/30 rounded p-2 border border-slate-800/30">
+                                    <MarkdownRenderer text={text} />
                                   </div>
                                 </div>
                               )}
@@ -454,9 +455,8 @@ export function WorksPage() {
                 {/* 内容预览 */}
                 <div className="bg-slate-900/30 border border-slate-800/50 rounded-xl p-4">
                   <div className="text-xs text-slate-500 mb-2">正文预览</div>
-                  <div className="text-sm text-slate-300 whitespace-pre-wrap leading-relaxed max-h-[400px] overflow-y-auto">
-                    {(info?.fullText || '').substring(0, 3000)}
-                    {(info?.fullText?.length || 0) > 3000 ? '\n\n... (内容过长已截断，请导出查看完整内容) ...' : ''}
+                  <div className="text-sm text-slate-300 leading-relaxed max-h-[400px] overflow-y-auto">
+                    <MarkdownRenderer text={(info?.fullText || '').substring(0, 3000) + ((info?.fullText?.length || 0) > 3000 ? '\n\n... (内容过长已截断，请导出查看完整内容) ...' : '')} />
                   </div>
                 </div>
               </div>

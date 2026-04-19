@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { BookOpen, Plus, Zap, Target, Rocket, ArrowRight, ArrowLeft, Factory, Palette, Sparkles, Layers, FileText, ChevronDown, ChevronUp } from 'lucide-react';
 import { Card } from '../components/ui/Card';
 import { Button } from '../components/ui/Button';
@@ -96,8 +96,13 @@ export function CreatePage() {
       await refreshWorks();
     } catch (e) {
       if (e.name !== 'AbortError') {
-        addToast('创作失败: ' + e.message, 'error');
-        setStatus('错误: ' + e.message);
+        const isConfigError = e.message?.includes('模型配置') || e.message?.includes('Provider') || e.message?.includes('baseURL') || e.message?.includes('apiKey');
+        const isNetworkError = e.message?.includes('网络错误') || e.message?.includes('ECONNREFUSED');
+        let display = e.message;
+        if (isConfigError) display = '【模型配置错误】请前往「设置 → 模型配置」检查 Provider、Base URL、API Key 和模型名称是否正确。';
+        if (isNetworkError) display = '【网络错误】无法连接到模型服务，请检查 Base URL 是否正确、服务是否运行。';
+        addToast(display, 'error');
+        setStatus(display);
       }
     } finally {
       setStarting(false);
@@ -199,9 +204,9 @@ export function CreatePage() {
               <div>
                 <label className="block text-sm font-medium text-slate-200 mb-2">发布平台</label>
                 <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-2">
-                  {platformStyles.map(s => (
+                  {platformStyles.map((s, i) => (
                     <button
-                      key={s.name}
+                      key={s.name + '-' + i}
                       onClick={() => setPlatformStyle(s.name)}
                       className={`p-3 rounded-xl border text-left transition-all ${
                         platformStyle === s.name
@@ -220,9 +225,9 @@ export function CreatePage() {
               <div>
                 <label className="block text-sm font-medium text-slate-200 mb-2">作者风格</label>
                 <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2">
-                  {authorStyles.map(s => (
+                  {authorStyles.map((s, i) => (
                     <button
-                      key={s.name}
+                      key={s.name + '-' + i}
                       onClick={() => setAuthorStyle(s.name)}
                       className={`p-3 rounded-xl border text-left transition-all ${
                         authorStyle === s.name
@@ -420,7 +425,14 @@ export function CreatePage() {
                 </Button>
               </div>
 
-              {status && <div className="text-sm text-slate-400">{status}</div>}
+              {status && (
+                <div className={`text-sm p-3 rounded-lg border ${status.includes('错误') ? 'bg-red-500/10 border-red-500/20 text-red-300' : 'text-slate-400'}`}>
+                  {status}
+                  {status.includes('模型配置') && (
+                    <Link to="/settings" className="ml-2 text-sky-400 hover:text-sky-300 underline text-xs">前往设置 →</Link>
+                  )}
+                </div>
+              )}
 
               {/* 步骤进度 */}
               {steps.length > 0 && (
@@ -476,13 +488,13 @@ export function CreatePage() {
               <div>
                 <label className="block text-sm text-slate-300 mb-1.5">平台风格</label>
                 <select value={platformStyle} onChange={(e) => setPlatformStyle(e.target.value)} className="w-full px-3 py-2 rounded-lg border border-slate-600 bg-slate-900/60 text-slate-50 text-sm">
-                  {platformStyles.map(s => <option key={s.name} value={s.name}>{s.name}</option>)}
+                  {platformStyles.map((s, i) => <option key={s.name + '-' + i} value={s.name}>{s.name}</option>)}
                 </select>
               </div>
               <div>
                 <label className="block text-sm text-slate-300 mb-1.5">作者风格</label>
                 <select value={authorStyle} onChange={(e) => setAuthorStyle(e.target.value)} className="w-full px-3 py-2 rounded-lg border border-slate-600 bg-slate-900/60 text-slate-50 text-sm">
-                  {authorStyles.map(s => <option key={s.name} value={s.name}>{s.name}</option>)}
+                  {authorStyles.map((s, i) => <option key={s.name + '-' + i} value={s.name}>{s.name}</option>)}
                 </select>
               </div>
             </div>

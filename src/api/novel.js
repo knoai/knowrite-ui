@@ -358,6 +358,17 @@ export async function getWorldContext(workId, chapterNumber) {
 // 作品关联套路
 export async function getWorkTemplates(workId) { return getJson(workUrl(workId, '/templates')); }
 export async function applyTemplate(workId, templateId) { return postJson(workUrl(workId, `/apply-template/${templateId}`), {}); }
+
+// 手动触发世界观提取
+export async function extractWorld(workId, model) {
+  const res = await fetch(`${API_BASE}/api/novel/works/${encodeURIComponent(workId)}/extract-world`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ model }),
+  });
+  if (!res.ok) throw new Error(await res.text());
+  return res.json();
+}
 export async function removeTemplate(workId, templateId) { return delJson(workUrl(workId, `/remove-template/${templateId}`)); }
 
 // 全局套路库
@@ -395,7 +406,7 @@ async function postStream(url, body, onChunk, signal, onEvent) {
       if (text === '[DONE]') continue;
       try {
         const ev = JSON.parse(text);
-        if (ev.type === 'chunk' && ev.chunk) onChunk(ev.chunk);
+        if (ev.type === 'chunk' && typeof ev.chunk === 'string') onChunk(ev.chunk);
         if (ev.type === 'stepStart' && onEvent) onEvent({ type: 'stepStart', step: ev.step, name: ev.name, model: ev.model });
         if (ev.type === 'stepEnd') {
           if (onEvent) onEvent({ type: 'stepEnd', step: ev.step });
@@ -406,8 +417,15 @@ async function postStream(url, body, onChunk, signal, onEvent) {
           onChunk('\n\n✅ 全部完成\n');
         }
         if (ev.type === 'error') {
-          const prefix = ev.message?.includes('未配置') || ev.message?.includes('Provider') ? '【模型配置错误】' : '【模型调用错误】';
-          throw new Error(`${prefix} ${ev.message || '流式响应异常'}`);
+          const raw = ev.message || '流式响应异常';
+          const isConfig = raw.includes('模型配置') || raw.includes('未配置') || raw.includes('Provider') || raw.includes('baseURL') || raw.includes('apiKey');
+          const isNetwork = raw.includes('网络错误') || raw.includes('ECONNREFUSED') || raw.includes('ENOTFOUND') || raw.includes('ETIMEDOUT');
+          let prefix = '【服务端错误】';
+          if (isConfig) prefix = '【模型配置错误】';
+          if (isNetwork) prefix = '【网络错误】';
+          const full = `${prefix} ${raw}${ev.context ? ` (${ev.context})` : ''}`;
+          if (onEvent) onEvent({ type: 'error', message: full, rawMessage: raw, context: ev.context });
+          throw new Error(full);
         }
       } catch (e) {
         if (e.message === '流式错误' || e.message.includes('流式')) throw e;

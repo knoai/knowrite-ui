@@ -77,7 +77,7 @@ export function TryCreatePage() {
         updateStage(key, { loading: false, done: true });
       }
       if (ev.type === 'error') {
-        updateStage(key, { loading: false, error: ev.message || '生成失败' });
+        updateStage(key, { loading: false, error: ev.message || '生成失败', errorContext: ev.context, rawMessage: ev.rawMessage });
       }
     };
 
@@ -174,8 +174,8 @@ export function TryCreatePage() {
                 onChange={(e) => setPlatformStyle(e.target.value)}
                 className="w-full bg-slate-900 border border-slate-700 text-slate-200 text-sm rounded-lg px-3 py-2"
               >
-                {platformStyles.map((s) => (
-                  <option key={s.name} value={s.name}>{s.name}</option>
+                {platformStyles.map((s, i) => (
+                  <option key={s.name + '-' + i} value={s.name}>{s.name}</option>
                 ))}
               </select>
             </div>
@@ -186,8 +186,8 @@ export function TryCreatePage() {
                 onChange={(e) => setAuthorStyle(e.target.value)}
                 className="w-full bg-slate-900 border border-slate-700 text-slate-200 text-sm rounded-lg px-3 py-2"
               >
-                {authorStyles.map((s) => (
-                  <option key={s.name} value={s.name}>{s.name}</option>
+                {authorStyles.map((s, i) => (
+                  <option key={s.name + '-' + i} value={s.name}>{s.name}</option>
                 ))}
               </select>
             </div>
@@ -301,7 +301,18 @@ export function TryCreatePage() {
               {isActive && (
                 <div className="mt-3 pt-3 border-t border-slate-700/40">
                   {state.error && (
-                    <div className="text-xs text-red-400 mb-2">❌ {state.error}</div>
+                    <div className="mb-3 p-3 rounded-lg bg-red-500/10 border border-red-500/20">
+                      <div className="text-xs text-red-300 font-medium mb-1">生成失败</div>
+                      <div className="text-xs text-red-400 leading-relaxed">{state.error}</div>
+                      {state.error?.includes('模型配置') && (
+                        <button
+                          onClick={() => navigate('/settings')}
+                          className="mt-2 text-xs text-sky-400 hover:text-sky-300 underline"
+                        >
+                          前往「设置 → 模型配置」检查 →
+                        </button>
+                      )}
+                    </div>
                   )}
                   {state.text ? (
                     <div className="bg-slate-950/50 rounded-lg p-3 max-h-96 overflow-y-auto">
