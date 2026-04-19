@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { ArrowLeft, Play, Download, BookOpen, Users, GitBranch, Map, Sparkles, BarChart3, ClipboardCheck, FileText, Plus } from 'lucide-react';
+import { ArrowLeft, Play, Download, BookOpen, Users, GitBranch, Map, Sparkles, BarChart3, ClipboardCheck, FileText, Plus, ChevronDown, ChevronRight, AlignLeft, ListTree } from 'lucide-react';
 import { Card, CardTitle, CardHeader } from '../components/ui/Card';
 import { Button } from '../components/ui/Button';
 import { Badge } from '../components/ui/Badge';
@@ -61,6 +61,9 @@ export function WorksPage() {
   const [streamText, setStreamText] = useState('');
   const [status, setStatus] = useState('');
   const [steps, setSteps] = useState([]);
+  const [openSections, setOpenSections] = useState({ theme: true, outline: false, tree: true });
+  const [expandedChapters, setExpandedChapters] = useState(new Set());
+  const [expandedOutlineChapters, setExpandedOutlineChapters] = useState(new Set());
 
   useEffect(() => { refreshWorks(); }, [refreshWorks]);
   useEffect(() => { if (workId && workId !== currentWorkId) selectWork(workId); }, [workId, currentWorkId, selectWork]);
@@ -110,6 +113,43 @@ export function WorksPage() {
     URL.revokeObjectURL(url);
   };
 
+  const toggleSection = (key) => setOpenSections(prev => ({ ...prev, [key]: !prev[key] }));
+
+  const toggleChapter = (num) => {
+    setExpandedChapters(prev => {
+      const next = new Set(prev);
+      if (next.has(num)) next.delete(num); else next.add(num);
+      return next;
+    });
+  };
+
+  const toggleOutlineChapter = (idx) => {
+    setExpandedOutlineChapters(prev => {
+      const next = new Set(prev);
+      if (next.has(idx)) next.delete(idx); else next.add(idx);
+      return next;
+    });
+  };
+
+  // 从详细大纲文本解析章节结构
+  const parseOutlineTree = (text) => {
+    if (!text) return [];
+    const lines = text.split('\n');
+    const chapters = [];
+    let current = null;
+    for (const line of lines) {
+      const match = line.match(/^###\s*\*{0,2}\s*第[一二三四五六七八九十百零\d]+章[：:]\s*(.*?)\s*\*{0,2}\s*$/);
+      if (match) {
+        if (current) chapters.push(current);
+        current = { title: match[1].trim(), content: [] };
+      } else if (current && line.trim()) {
+        current.content.push(line);
+      }
+    }
+    if (current) chapters.push(current);
+    return chapters;
+  };
+
   // 作品列表页
   if (!workId) {
     return (
@@ -154,6 +194,7 @@ export function WorksPage() {
   const hasVolumes = info?.volumes && info.volumes.length > 0;
   const title = info?.topic ? info.topic.split('\n')[0].trim() : '未命名作品';
   const totalChars = info?.chapters?.reduce((sum, ch) => sum + (ch.chars || 0), 0) || 0;
+  const outlineChapters = parseOutlineTree(info?.outlineDetailed || '');
 
   return (
     <div className="space-y-4">
@@ -277,6 +318,139 @@ export function WorksPage() {
                     <div className="text-lg font-bold text-slate-200">{info?.writingMode === 'free' ? '自由风' : '工业风'}</div>
                   </div>
                 </div>
+                {/* 简介大纲 */}
+                <div className="bg-slate-900/30 border border-slate-800/50 rounded-xl overflow-hidden">
+                  <button onClick={() => toggleSection('theme')} className="w-full flex items-center justify-between px-4 py-3 hover:bg-slate-800/30 transition">
+                    <div className="flex items-center gap-2">
+                      <AlignLeft size={14} className="text-sky-400" />
+                      <span className="text-sm font-medium text-slate-200">简介大纲</span>
+                    </div>
+                    {openSections.theme ? <ChevronDown size={14} className="text-slate-500" /> : <ChevronRight size={14} className="text-slate-500" />}
+                  </button>
+                  {openSections.theme && (
+                    <div className="px-4 pb-4">
+                      <div className="text-sm text-slate-300 whitespace-pre-wrap leading-relaxed max-h-[400px] overflow-y-auto">
+                        {info?.outlineTheme || '暂无简介大纲'}
+                      </div>
+                    </div>
+                  )}
+                </div>
+
+                {/* 详细纲章 */}
+                <div className="bg-slate-900/30 border border-slate-800/50 rounded-xl overflow-hidden">
+                  <button onClick={() => toggleSection('outline')} className="w-full flex items-center justify-between px-4 py-3 hover:bg-slate-800/30 transition">
+                    <div className="flex items-center gap-2">
+                      <ListTree size={14} className="text-violet-400" />
+                      <span className="text-sm font-medium text-slate-200">详细纲章</span>
+                      {outlineChapters.length > 0 && (
+                        <span className="text-[10px] text-slate-500 bg-slate-800/60 px-1.5 py-0.5 rounded">{outlineChapters.length} 章</span>
+                      )}
+                    </div>
+                    {openSections.outline ? <ChevronDown size={14} className="text-slate-500" /> : <ChevronRight size={14} className="text-slate-500" />}
+                  </button>
+                  {openSections.outline && (
+                    <div className="px-4 pb-4 space-y-1">
+                      {outlineChapters.length === 0 ? (
+                        <div className="text-sm text-slate-500 py-2">暂无详细纲章</div>
+                      ) : (
+                        outlineChapters.map((ch, idx) => {
+                          const isOpen = expandedOutlineChapters.has(idx);
+                          return (
+                            <div key={idx} className="border border-slate-800/40 rounded-lg overflow-hidden">
+                              <button onClick={() => toggleOutlineChapter(idx)} className="w-full flex items-center gap-2 px-3 py-2 hover:bg-slate-800/30 transition text-left">
+                                {isOpen ? <ChevronDown size={12} className="text-slate-500 shrink-0" /> : <ChevronRight size={12} className="text-slate-500 shrink-0" />}
+                                <span className="text-xs text-slate-400 shrink-0">第{idx + 1}章</span>
+                                <span className="text-sm text-slate-200 truncate">{ch.title}</span>
+                              </button>
+                              {isOpen && (
+                                <div className="px-3 pb-3 pl-8">
+                                  <div className="text-xs text-slate-400 whitespace-pre-wrap leading-relaxed">{ch.content.join('\n')}</div>
+                                </div>
+                              )}
+                            </div>
+                          );
+                        })
+                      )}
+                    </div>
+                  )}
+                </div>
+
+                {/* 章节内容树 */}
+                <div className="bg-slate-900/30 border border-slate-800/50 rounded-xl overflow-hidden">
+                  <button onClick={() => toggleSection('tree')} className="w-full flex items-center justify-between px-4 py-3 hover:bg-slate-800/30 transition">
+                    <div className="flex items-center gap-2">
+                      <GitBranch size={14} className="text-emerald-400" />
+                      <span className="text-sm font-medium text-slate-200">章节内容</span>
+                      {info?.chapters?.length > 0 && (
+                        <span className="text-[10px] text-slate-500 bg-slate-800/60 px-1.5 py-0.5 rounded">{info.chapters.length} 章</span>
+                      )}
+                    </div>
+                    {openSections.tree ? <ChevronDown size={14} className="text-slate-500" /> : <ChevronRight size={14} className="text-slate-500" />}
+                  </button>
+                  {openSections.tree && (
+                    <div className="px-4 pb-4 space-y-1">
+                      {(!info?.chapters || info.chapters.length === 0) ? (
+                        <div className="text-sm text-slate-500 py-2">暂无章节</div>
+                      ) : hasVolumes ? (
+                        // 多卷结构：按卷分组
+                        info.volumes.map((vol) => (
+                          <div key={vol.number} className="border border-slate-800/40 rounded-lg overflow-hidden">
+                            <div className="px-3 py-2 bg-slate-800/30 text-sm font-medium text-slate-200">
+                              第{vol.number}卷{vol.title ? ` · ${vol.title}` : ''}
+                            </div>
+                            <div className="px-2 pb-2 space-y-0.5">
+                              {(info.chapters || []).filter(ch => ch.volume === vol.number || (!ch.volume && vol.number === 1)).map((ch) => {
+                                const isOpen = expandedChapters.has(ch.number);
+                                const text = info.chapterTexts?.[ch.number] || '';
+                                return (
+                                  <div key={ch.number}>
+                                    <button onClick={() => toggleChapter(ch.number)} className="w-full flex items-center gap-2 px-2 py-1.5 hover:bg-slate-800/30 transition rounded text-left">
+                                      {isOpen ? <ChevronDown size={12} className="text-slate-500 shrink-0" /> : <ChevronRight size={12} className="text-slate-500 shrink-0" />}
+                                      <span className="text-xs text-slate-400 shrink-0">第{ch.number}章</span>
+                                      <span className="text-sm text-slate-200 truncate">{ch.title || '未命名章节'}</span>
+                                      <span className="text-[10px] text-slate-600 ml-auto shrink-0">{ch.chars || 0} 字</span>
+                                    </button>
+                                    {isOpen && text && (
+                                      <div className="px-2 pb-2 pl-7">
+                                        <div className="text-xs text-slate-400 whitespace-pre-wrap leading-relaxed max-h-[300px] overflow-y-auto bg-slate-950/30 rounded p-2 border border-slate-800/30">
+                                          {text}
+                                        </div>
+                                      </div>
+                                    )}
+                                  </div>
+                                );
+                              })}
+                            </div>
+                          </div>
+                        ))
+                      ) : (
+                        // 单卷平铺
+                        info.chapters.map((ch) => {
+                          const isOpen = expandedChapters.has(ch.number);
+                          const text = info.chapterTexts?.[ch.number] || '';
+                          return (
+                            <div key={ch.number} className="border border-slate-800/40 rounded-lg overflow-hidden">
+                              <button onClick={() => toggleChapter(ch.number)} className="w-full flex items-center gap-2 px-3 py-2 hover:bg-slate-800/30 transition text-left">
+                                {isOpen ? <ChevronDown size={12} className="text-slate-500 shrink-0" /> : <ChevronRight size={12} className="text-slate-500 shrink-0" />}
+                                <span className="text-xs text-slate-400 shrink-0">第{ch.number}章</span>
+                                <span className="text-sm text-slate-200 truncate">{ch.title || '未命名章节'}</span>
+                                <span className="text-[10px] text-slate-600 ml-auto shrink-0">{ch.chars || 0} 字</span>
+                              </button>
+                              {isOpen && text && (
+                                <div className="px-3 pb-3 pl-8">
+                                  <div className="text-xs text-slate-400 whitespace-pre-wrap leading-relaxed max-h-[300px] overflow-y-auto bg-slate-950/30 rounded p-2 border border-slate-800/30">
+                                    {text}
+                                  </div>
+                                </div>
+                              )}
+                            </div>
+                          );
+                        })
+                      )}
+                    </div>
+                  )}
+                </div>
+
                 {/* 内容预览 */}
                 <div className="bg-slate-900/30 border border-slate-800/50 rounded-xl p-4">
                   <div className="text-xs text-slate-500 mb-2">正文预览</div>
