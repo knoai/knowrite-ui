@@ -213,11 +213,7 @@ export function GuidePage() {
                 <tr><th className="text-left px-3 py-1.5">Provider</th><th className="text-left px-3 py-1.5">类型</th><th className="text-left px-3 py-1.5">说明</th></tr>
               </thead>
               <tbody className="divide-y divide-slate-700/30 text-slate-300">
-                <tr className="bg-slate-900/20"><td className="px-3 py-1.5">yuanbao</td><td className="px-3 py-1.5">原生 API</td><td className="px-3 py-1.5">腾讯元宝，直接调用 API</td></tr>
-                <tr className="bg-slate-900/10"><td className="px-3 py-1.5">doubao</td><td className="px-3 py-1.5">浏览器自动化</td><td className="px-3 py-1.5">豆包，需打开网页并登录</td></tr>
-                <tr className="bg-slate-900/20"><td className="px-3 py-1.5">qwen</td><td className="px-3 py-1.5">浏览器自动化</td><td className="px-3 py-1.5">通义千问，需打开网页并登录</td></tr>
-                <tr className="bg-slate-900/10"><td className="px-3 py-1.5">kimi</td><td className="px-3 py-1.5">浏览器自动化</td><td className="px-3 py-1.5">Kimi，需打开网页并登录</td></tr>
-                <tr className="bg-slate-900/20"><td className="px-3 py-1.5">openai</td><td className="px-3 py-1.5">兼容 API</td><td className="px-3 py-1.5">OpenAI / 百炼 / MiniMax / DeepSeek 等</td></tr>
+                <tr className="bg-slate-900/20"><td className="px-3 py-1.5">任意名称</td><td className="px-3 py-1.5">OpenAI 兼容 API</td><td className="px-3 py-1.5">所有模型均通过 OpenAI 兼容协议调用，配置 baseURL 和 API Key 即可</td></tr>
               </tbody>
             </table>
           </div>
@@ -230,7 +226,7 @@ export function GuidePage() {
             <li>第 2 章 → 列表第 2 个模型</li>
             <li>第 N 章 → <code className="bg-slate-700/40 px-1 py-0.5 rounded text-xs">(N-1) % 模型数量</code></li>
           </ul>
-          <p className="text-sm text-slate-300 mb-2">轮换只影响 <strong className="text-slate-200">writer（作者）</strong>角色。默认配置：作家A（deepseek-v3）+ 作家B（deepseek-r1）。</p>
+          <p className="text-sm text-slate-300 mb-2">轮换只影响 <strong className="text-slate-200">writer（作者）</strong>角色。需在「设置-模型配置」中手动添加轮换模型。</p>
 
           <p className="text-sm text-slate-300 mb-2">
             <strong className="text-slate-200">角色默认模型与温度</strong> — 19 个角色可独立配置：

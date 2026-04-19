@@ -1,9 +1,10 @@
 import { NavLink, Outlet, useLocation } from 'react-router-dom';
-import { BookOpen, Library, Wrench, Settings, HelpCircle, ChevronDown, Bot, Sparkles, MessageCircle, Layers } from 'lucide-react';
+import { BookOpen, Library, Wrench, Settings, HelpCircle, ChevronDown, Bot, Sparkles, MessageCircle, Layers, FlaskConical } from 'lucide-react';
 import { useState } from 'react';
 
 const mainNav = [
   { to: '/create', label: '开始创作', icon: BookOpen, desc: '新建或导入作品' },
+  { to: '/try-create', label: '尝试创作', icon: FlaskConical, desc: '渐进式体验创作流程' },
   { to: '/works', label: '我的作品', icon: Library, desc: '管理已有作品' },
 ];
 

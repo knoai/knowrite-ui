@@ -2,7 +2,10 @@ const API_BASE = '';
 
 export async function getWorks() {
   const res = await fetch(`${API_BASE}/api/novel/works`);
-  if (!res.ok) throw new Error(await res.text());
+  if (!res.ok) {
+    const errText = await res.text();
+    throw new Error(`服务器错误 (${res.status}): ${errText || '未知错误'}`);
+  }
   return res.json();
 }
 
@@ -18,6 +21,22 @@ export async function startNovel(body, onChunk, signal, onEvent) {
 
 export async function continueNovel(body, onChunk, signal, onEvent) {
   return postStream(`${API_BASE}/api/novel/continue`, body, onChunk, signal, onEvent);
+}
+
+export async function tryCreateOutline(body, onChunk, signal, onEvent) {
+  return postStream(`${API_BASE}/api/novel/try/outline`, body, onChunk, signal, onEvent);
+}
+
+export async function tryCreateDetailedOutline(body, onChunk, signal, onEvent) {
+  return postStream(`${API_BASE}/api/novel/try/detailed-outline`, body, onChunk, signal, onEvent);
+}
+
+export async function tryCreateChapters(body, onChunk, signal, onEvent) {
+  return postStream(`${API_BASE}/api/novel/try/chapters`, body, onChunk, signal, onEvent);
+}
+
+export async function tryContinue(body, onChunk, signal, onEvent) {
+  return postStream(`${API_BASE}/api/novel/try/continue`, body, onChunk, signal, onEvent);
 }
 
 export async function importNovel(body) {
@@ -169,6 +188,36 @@ export async function saveModelConfig(body) {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(body),
+  });
+  if (!res.ok) throw new Error(await res.text());
+  return res.json();
+}
+
+export async function switchProvider(provider, options = {}) {
+  const res = await fetch(`${API_BASE}/api/novel/switch-provider`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ provider, ...options }),
+  });
+  if (!res.ok) throw new Error(await res.text());
+  return res.json();
+}
+
+export async function testProvider(provider) {
+  const res = await fetch(`${API_BASE}/api/novel/test-provider`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ provider }),
+  });
+  if (!res.ok) throw new Error(await res.text());
+  return res.json();
+}
+
+export async function testModels(provider) {
+  const res = await fetch(`${API_BASE}/api/novel/test-models`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ provider }),
   });
   if (!res.ok) throw new Error(await res.text());
   return res.json();
@@ -352,8 +401,14 @@ async function postStream(url, body, onChunk, signal, onEvent) {
           if (onEvent) onEvent({ type: 'stepEnd', step: ev.step });
           onChunk(`\n\n--- ${ev.step} 完成 ---\n\n`);
         }
-        if (ev.type === 'done') onChunk('\n\n✅ 全部完成\n');
-        if (ev.type === 'error') throw new Error(ev.message || '流式错误');
+        if (ev.type === 'done') {
+          if (onEvent) onEvent({ type: 'done', meta: ev.meta });
+          onChunk('\n\n✅ 全部完成\n');
+        }
+        if (ev.type === 'error') {
+          const prefix = ev.message?.includes('未配置') || ev.message?.includes('Provider') ? '【模型配置错误】' : '【模型调用错误】';
+          throw new Error(`${prefix} ${ev.message || '流式响应异常'}`);
+        }
       } catch (e) {
         if (e.message === '流式错误' || e.message.includes('流式')) throw e;
         // ignore malformed JSON lines

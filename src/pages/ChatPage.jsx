@@ -10,8 +10,8 @@ export function ChatPage() {
   const [prompts, setPrompts] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  const [provider, setProvider] = useState('yuanbao');
-  const [model, setModel] = useState('deepseek-v3');
+  const [provider, setProvider] = useState('');
+  const [model, setModel] = useState('');
   const [temperature, setTemperature] = useState(0.7);
   const [promptTemplate, setPromptTemplate] = useState('');
   const [systemPrompt, setSystemPrompt] = useState('');
@@ -29,9 +29,9 @@ export function ChatPage() {
       .then(([cfg, p]) => {
         setProviders(cfg.providers || {});
         setPrompts(p.prompts || []);
-        const firstEnabled = Object.entries(cfg.providers || {}).find(([, v]) => v.enabled)?.[0] || 'yuanbao';
+        const firstEnabled = Object.entries(cfg.providers || {}).find(([, v]) => v.enabled)?.[0] || '';
         setProvider(firstEnabled);
-        const defaultModel = (cfg.providers?.[firstEnabled]?.models || [])[0] || 'deepseek-v3';
+        const defaultModel = firstEnabled ? (cfg.providers?.[firstEnabled]?.models || [])[0] || '' : '';
         setModel(defaultModel);
       })
       .catch((e) => console.error('加载配置失败', e))

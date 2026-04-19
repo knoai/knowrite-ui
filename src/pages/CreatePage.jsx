@@ -353,15 +353,15 @@ export function CreatePage() {
                   <div className="mt-3 grid grid-cols-1 md:grid-cols-3 gap-3">
                     <div>
                       <div className="text-xs text-slate-500 mb-1">大纲模型</div>
-                      <Input value={modelOutline} onChange={(e) => setModelOutline(e.target.value)} placeholder="deepseek-r1" />
+                      <Input value={modelOutline} onChange={(e) => setModelOutline(e.target.value)} placeholder="输入模型名" />
                     </div>
                     <div>
                       <div className="text-xs text-slate-500 mb-1">正文模型</div>
-                      <Input value={modelChapter} onChange={(e) => setModelChapter(e.target.value)} placeholder="deepseek-v3" />
+                      <Input value={modelChapter} onChange={(e) => setModelChapter(e.target.value)} placeholder="输入模型名" />
                     </div>
                     <div>
                       <div className="text-xs text-slate-500 mb-1">润色模型</div>
-                      <Input value={modelPolish} onChange={(e) => setModelPolish(e.target.value)} placeholder="hunyuan" />
+                      <Input value={modelPolish} onChange={(e) => setModelPolish(e.target.value)} placeholder="输入模型名" />
                     </div>
                   </div>
                 )}
