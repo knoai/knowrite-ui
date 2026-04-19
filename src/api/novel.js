@@ -177,6 +177,22 @@ export async function setReviewPreset(preset) {
   return res.json();
 }
 
+export async function getModelLibrary() {
+  const res = await fetch(`${API_BASE}/api/novel/model-library`);
+  if (!res.ok) throw new Error(await res.text());
+  return res.json();
+}
+
+export async function saveModelLibrary(body) {
+  const res = await fetch(`${API_BASE}/api/novel/model-library`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(body),
+  });
+  if (!res.ok) throw new Error(await res.text());
+  return res.json();
+}
+
 export async function getModelConfig() {
   const res = await fetch(`${API_BASE}/api/novel/model-config`);
   if (!res.ok) throw new Error(await res.text());

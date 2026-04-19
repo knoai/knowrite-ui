@@ -33,6 +33,16 @@ export function SettingsPage() {
     }
   };
 
+  const handleSaveModelLibrary = async () => {
+    setStatus('');
+    try {
+      await api.saveModelLibrary(modelLibrary);
+      setStatus('模型库保存成功');
+    } catch (e) {
+      setStatus('模型库保存失败: ' + e.message);
+    }
+  };
+
   const updateList = (key, index, field, value) => {
     const next = [...(settings[key] || [])];
     next[index] = { ...next[index], [field]: value };
@@ -158,18 +168,20 @@ export function SettingsPage() {
   };
 
   const [testStatus, setTestStatus] = useState({});
-  const [modelsTestStatus, setModelsTestStatus] = useState({});
-  const [switchPanel, setSwitchPanel] = useState(null);
-  const [switchMode, setSwitchMode] = useState('smart');
-  const [switchUniformModel, setSwitchUniformModel] = useState('');
-  const [switchCustomMap, setSwitchCustomMap] = useState({});
-  const [switchSelectedRoles, setSwitchSelectedRoles] = useState([]);
-  const [showAddRole, setShowAddRole] = useState(false);
-  const [newRoleKey, setNewRoleKey] = useState('');
-  const [showBatchReplace, setShowBatchReplace] = useState(false);
-  const [batchReplaceType, setBatchReplaceType] = useState('provider');
-  const [batchReplaceOld, setBatchReplaceOld] = useState('');
-  const [batchReplaceNew, setBatchReplaceNew] = useState('');
+  const [modelLibrary, setModelLibrary] = useState([]);
+  const [selectedRoles, setSelectedRoles] = useState([]);
+  const [batchProvider, setBatchProvider] = useState('');
+  const [batchModel, setBatchModel] = useState('');
+  const [batchTemperature, setBatchTemperature] = useState(0.7);
+  const [showAdvanced, setShowAdvanced] = useState(false);
+  const [editingLibIndex, setEditingLibIndex] = useState(null);
+  const [libForm, setLibForm] = useState({ key: '', name: '', url: '', modelsText: '' });
+
+  useEffect(() => {
+    api.getModelLibrary()
+      .then((data) => setModelLibrary(Array.isArray(data) ? data : []))
+      .catch(() => setModelLibrary([]));
+  }, []);
 
   const handleSwitchProvider = async (provider) => {
     setStatus(`正在切换到 ${provider}...`);
@@ -497,162 +509,110 @@ export function SettingsPage() {
 
         {activeTab === 'models' && (
           <div className="space-y-5">
+            {/* ===== 模型库管理 ===== */}
             <div className="p-4 bg-slate-900/40 border border-slate-700/40 rounded-lg space-y-3">
               <div className="flex items-center justify-between">
-                <h3 className="text-sm font-medium text-slate-200">快速切换模型</h3>
-                <span className="text-xs text-slate-500">
-                  当前默认: <span className="text-sky-400">{getModelCfg().defaultProvider || '未设置'}</span>
-                </span>
+                <h3 className="text-sm font-medium text-slate-200">模型库</h3>
+                <div className="flex gap-2">
+                  <Button size="sm" variant="secondary" onClick={handleSaveModelLibrary}>保存模型库</Button>
+                  <Button size="sm" onClick={() => { setEditingLibIndex(-1); setLibForm({ key: '', name: '', url: '', modelsText: '' }); }}>添加模型库</Button>
+                </div>
               </div>
               <div className="text-xs text-slate-500">
-                点击 Provider 展开配置面板，可选择模式、模型和目标角色，一键批量切换。
+                模型库是全局 Provider 模板，添加 Provider 时可从中选择自动填充。修改后请点「保存模型库」。
               </div>
-              {providerKeys.length === 0 ? (
-                <div className="text-xs text-amber-400 bg-amber-500/10 border border-amber-500/20 rounded-lg p-3">
-                  尚未配置任何 Provider，请先在下方「Provider 配置」中添加模型提供商。
-                </div>
-              ) : (
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-                {providerKeys.map((pk) => {
-                  const pCfg = getModelCfg().providers?.[pk];
-                  return (
-                  <div key={pk} className="space-y-2">
-                    <button
-                      onClick={() => openSwitchPanel(pk)}
-                      className={`w-full p-3 rounded-lg border bg-gradient-to-br from-slate-700/20 to-slate-800/20 border-slate-700/40 hover:border-sky-500/60 transition-colors text-left ${switchPanel === pk ? 'ring-2 ring-sky-500' : ''}`}
-                    >
-                      <div className="text-sm font-semibold text-slate-200">{pCfg?.alias || pk}</div>
-                      <div className="text-xs text-slate-400">{pCfg?.models?.length || 0} 个模型</div>
-                    </button>
-                    {switchPanel === pk && (
-                      <div className="p-3 bg-slate-900/60 border border-slate-700/40 rounded-lg space-y-3">
-                        {/* 模式选择 */}
-                        <div className="space-y-1">
-                          <div className="text-xs text-slate-400">分配模式</div>
-                          <div className="flex gap-2 flex-wrap">
-                            {[
-                              { key: 'smart', label: '智能分配' },
-                              { key: 'uniform', label: '统一模型' },
-                              { key: 'custom', label: '自定义' },
-                            ].map((m) => (
-                              <label key={m.key} className={`cursor-pointer text-xs px-2 py-1 rounded border transition ${switchMode === m.key ? 'bg-sky-500/20 border-sky-500 text-sky-300' : 'border-slate-700 text-slate-400 hover:border-slate-500'}`}>
-                                <input
-                                  type="radio"
-                                  name={`switch-mode-${pk}`}
-                                  value={m.key}
-                                  checked={switchMode === m.key}
-                                  onChange={() => setSwitchMode(m.key)}
-                                  className="sr-only"
-                                />
-                                {m.label}
-                              </label>
-                            ))}
-                          </div>
-                        </div>
 
-                        {/* 统一模型选择 */}
-                        {switchMode === 'uniform' && (
-                          <div className="space-y-1">
-                            <div className="text-xs text-slate-400">统一使用模型</div>
-                            <Input
-                              list={`model-suggestions-${pk}`}
-                              value={switchUniformModel}
-                              onChange={(e) => setSwitchUniformModel(e.target.value)}
-                              placeholder="输入或选择模型"
-                              className="text-xs"
-                            />
-                            <datalist id={`model-suggestions-${pk}`}>
-                              {getModelSuggestions(pk).map((m) => (
-                                <option key={m} value={m} />
-                              ))}
-                            </datalist>
-                          </div>
-                        )}
-
-                        {/* 自定义模型 */}
-                        {switchMode === 'custom' && (
-                          <div className="space-y-2 max-h-48 overflow-y-auto pr-1">
-                            <div className="flex items-center justify-between">
-                              <div className="text-xs text-slate-400">角色模型映射</div>
-                              <button
-                                className="text-xs text-sky-400 hover:text-sky-300"
-                                onClick={() => applySmartFill(pk)}
-                              >
-                                智能填充
-                              </button>
-                            </div>
-                            {ALL_ROLES.map((role) => (
-                              <div key={role} className="flex items-center gap-2">
-                                <span className="text-xs text-slate-300 w-20 truncate">{ROLE_LABELS[role]}</span>
-                                <Input
-                                  list={`model-suggestions-${pk}`}
-                                  value={switchCustomMap[role] || ''}
-                                  onChange={(e) => setSwitchCustomMap((prev) => ({ ...prev, [role]: e.target.value }))}
-                                  placeholder="输入或选择模型"
-                                  className="flex-1 text-xs py-1"
-                                />
-                              </div>
-                            ))}
-                            <datalist id={`model-suggestions-${pk}`}>
-                              {getModelSuggestions(pk).map((m) => (
-                                <option key={m} value={m} />
-                              ))}
-                            </datalist>
-                          </div>
-                        )}
-
-                        {/* 角色选择 */}
-                        <div className="space-y-1">
-                          <div className="flex items-center justify-between">
-                            <div className="text-xs text-slate-400">目标角色 ({switchSelectedRoles.length}/{ALL_ROLES.length})</div>
-                            <div className="flex gap-2">
-                              <button className="text-xs text-sky-400 hover:text-sky-300" onClick={() => setSwitchSelectedRoles([...ALL_ROLES])}>全选</button>
-                              <button className="text-xs text-slate-500 hover:text-slate-300" onClick={() => setSwitchSelectedRoles([])}>清空</button>
-                            </div>
-                          </div>
-                          <div className="flex flex-wrap gap-1.5 max-h-24 overflow-y-auto">
-                            {ALL_ROLES.map((role) => (
-                              <label key={role} className={`cursor-pointer text-xs px-2 py-0.5 rounded border transition ${switchSelectedRoles.includes(role) ? 'bg-sky-500/20 border-sky-500 text-sky-300' : 'border-slate-700 text-slate-500 hover:border-slate-500'}`}>
-                                <input
-                                  type="checkbox"
-                                  checked={switchSelectedRoles.includes(role)}
-                                  onChange={(e) => {
-                                    if (e.target.checked) {
-                                      setSwitchSelectedRoles((prev) => [...prev, role]);
-                                    } else {
-                                      setSwitchSelectedRoles((prev) => prev.filter((r) => r !== role));
-                                    }
-                                  }}
-                                  className="sr-only"
-                                />
-                                {ROLE_LABELS[role]}
-                              </label>
-                            ))}
-                          </div>
-                        </div>
-
-                        {/* 应用按钮 */}
-                        <div className="flex gap-2">
-                          <Button size="sm" variant="primary" onClick={() => handleSwitchProvider(pk)}>
-                            应用切换
-                          </Button>
-                          <Button size="sm" variant="secondary" onClick={() => setSwitchPanel(null)}>
-                            取消
-                          </Button>
-                        </div>
-                      </div>
-                    )}
+              {editingLibIndex !== null && (
+                <div className="p-3 bg-slate-900/60 border border-slate-700/40 rounded-lg space-y-2">
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                    <Input value={libForm.key} onChange={(e) => setLibForm({ ...libForm, key: e.target.value })} placeholder="Key (唯一标识)" />
+                    <Input value={libForm.name} onChange={(e) => setLibForm({ ...libForm, name: e.target.value })} placeholder="显示名称" />
+                    <Input value={libForm.url} onChange={(e) => setLibForm({ ...libForm, url: e.target.value })} placeholder="Base URL" />
                   </div>
-                )})}
+                  <Textarea
+                    value={libForm.modelsText}
+                    onChange={(e) => setLibForm({ ...libForm, modelsText: e.target.value })}
+                    placeholder="模型列表，每行一个，格式：id|名称（如 qwen-plus|Qwen-Plus）"
+                    rows={3}
+                  />
+                  <div className="flex gap-2">
+                    <Button size="sm" onClick={() => {
+                      const models = libForm.modelsText.split('\n').map((l) => l.trim()).filter(Boolean).map((l) => {
+                        const [id, ...nameParts] = l.split('|');
+                        return { id: id.trim(), name: (nameParts.join('|') || id).trim() };
+                      });
+                      const entry = { key: libForm.key, name: libForm.name, url: libForm.url, models };
+                      const next = [...modelLibrary];
+                      if (editingLibIndex >= 0) {
+                        next[editingLibIndex] = entry;
+                      } else {
+                        next.push(entry);
+                      }
+                      setModelLibrary(next);
+                      setEditingLibIndex(null);
+                    }}>
+                      {editingLibIndex >= 0 ? '更新' : '添加'}
+                    </Button>
+                    <Button size="sm" variant="secondary" onClick={() => setEditingLibIndex(null)}>取消</Button>
+                  </div>
+                </div>
+              )}
+
+              <div className="overflow-x-auto">
+                <table className="min-w-full text-sm border border-slate-700/40 rounded-lg">
+                  <thead className="bg-slate-900/60 text-slate-300">
+                    <tr>
+                      <th className="text-left px-3 py-2 font-medium">名称</th>
+                      <th className="text-left px-3 py-2 font-medium">Key</th>
+                      <th className="text-left px-3 py-2 font-medium">URL</th>
+                      <th className="text-left px-3 py-2 font-medium">模型数</th>
+                      <th className="text-left px-3 py-2 font-medium w-24">操作</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-slate-700/40">
+                    {modelLibrary.map((lib, idx) => (
+                      <tr key={lib.key} className="bg-slate-900/20">
+                        <td className="px-3 py-2 text-slate-200">{lib.name}</td>
+                        <td className="px-3 py-2 text-xs text-slate-400 font-mono">{lib.key}</td>
+                        <td className="px-3 py-2 text-xs text-slate-400 truncate max-w-xs">{lib.url}</td>
+                        <td className="px-3 py-2 text-xs text-slate-400">{(lib.models || []).length}</td>
+                        <td className="px-3 py-2">
+                          <div className="flex gap-2">
+                            <button className="text-xs text-sky-400 hover:text-sky-300" onClick={() => {
+                              setEditingLibIndex(idx);
+                              setLibForm({
+                                key: lib.key,
+                                name: lib.name,
+                                url: lib.url || '',
+                                modelsText: (lib.models || []).map((m) => `${m.id}|${m.name}`).join('\n'),
+                              });
+                            }}>编辑</button>
+                            <button className="text-xs text-slate-500 hover:text-red-400" onClick={() => {
+                              const next = [...modelLibrary];
+                              next.splice(idx, 1);
+                              setModelLibrary(next);
+                            }}>删除</button>
+                          </div>
+                        </td>
+                      </tr>
+                    ))}
+                    {modelLibrary.length === 0 && (
+                      <tr>
+                        <td colSpan={5} className="px-3 py-4 text-xs text-slate-500 text-center">模型库为空，点击「添加模型库」开始配置。</td>
+                      </tr>
+                    )}
+                  </tbody>
+                </table>
               </div>
-            )}
             </div>
 
-            <div>
-              <div className="flex items-center justify-between mb-3">
+            {/* ===== Provider 配置 ===== */}
+            <div className="p-4 bg-slate-900/40 border border-slate-700/40 rounded-lg space-y-3">
+              <div className="flex items-center justify-between">
                 <h3 className="text-sm font-medium text-slate-200">Provider 配置</h3>
                 <Button size="sm" onClick={addProvider}>添加 Provider</Button>
               </div>
+
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
                 {providerKeys.map((pk) => {
                   const p = getModelCfg().providers[pk];
@@ -676,15 +636,35 @@ export function SettingsPage() {
                         </div>
                         <Button variant="danger" size="sm" onClick={() => removeProvider(pk)}>删除</Button>
                       </div>
-                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                      <div className="grid grid-cols-1 gap-2">
+                        <div className="flex gap-2">
+                          <select
+                            className="flex-1 bg-slate-900 border border-slate-700 text-slate-200 text-sm rounded px-2 py-1.5"
+                            value=""
+                            onChange={(e) => {
+                              const key = e.target.value;
+                              if (!key) return;
+                              const lib = modelLibrary.find((l) => l.key === key);
+                              if (lib) {
+                                updateProvider(pk, 'alias', lib.name);
+                                updateProvider(pk, 'baseURL', lib.url);
+                                updateProvider(pk, 'models', lib.models || []);
+                              }
+                              e.target.value = '';
+                            }}
+                          >
+                            <option value="">从模型库选择…</option>
+                            {modelLibrary.map((lib) => (
+                              <option key={lib.key} value={lib.key}>{lib.name}</option>
+                            ))}
+                            <option value="__custom__">自定义</option>
+                          </select>
+                        </div>
                         <Input value={p.baseURL || ''} onChange={(e) => updateProvider(pk, 'baseURL', e.target.value)} placeholder="Base URL" />
                         <div className="flex gap-2">
-                          <Input type="password" value={p.apiKey || ''} onChange={(e) => updateProvider(pk, 'apiKey', e.target.value)} placeholder="API Key" />
+                          <Input type="password" value={p.apiKey || ''} onChange={(e) => updateProvider(pk, 'apiKey', e.target.value)} placeholder="API Key（本地模型可留空）" className="flex-1" />
                           <Button size="sm" onClick={() => handleTestProvider(pk)} disabled={testStatus[pk]?.type === 'loading'}>
                             {testStatus[pk]?.type === 'loading' ? '测试中...' : '测试'}
-                          </Button>
-                          <Button size="sm" variant="secondary" onClick={() => handleTestModels(pk)} disabled={modelsTestStatus[pk]?.type === 'loading'}>
-                            {modelsTestStatus[pk]?.type === 'loading' ? '批量测试中...' : '测所有模型'}
                           </Button>
                         </div>
                       </div>
@@ -694,325 +674,285 @@ export function SettingsPage() {
                       {testStatus[pk]?.type === 'error' && (
                         <div className="text-xs text-red-400">❌ 测试失败：{testStatus[pk].msg}</div>
                       )}
-                      {modelsTestStatus[pk]?.type === 'done' && (
-                        <div className="space-y-1">
-                          <div className="text-xs text-slate-400">模型可用性检测结果：</div>
-                          <div className="grid grid-cols-1 gap-1">
-                            {modelsTestStatus[pk].results.map((r) => (
-                              <div key={r.model} className={`text-xs flex items-center gap-2 ${r.valid ? 'text-green-400' : 'text-red-400'}`}>
-                                <span>{r.valid ? '✅' : '❌'}</span>
-                                <span className="font-mono">{r.model}</span>
-                                {r.valid ? (
-                                  <span className="text-slate-500">{r.durationMs}ms · {r.response}</span>
-                                ) : (
-                                  <span className="text-slate-500">{r.error}</span>
-                                )}
-                              </div>
-                            ))}
-                          </div>
-                        </div>
-                      )}
-                      {modelsTestStatus[pk]?.type === 'error' && (
-                        <div className="text-xs text-red-400">❌ 批量测试失败：{modelsTestStatus[pk].msg}</div>
-                      )}
 
-                      {/* 模型列表管理 */}
-                      <div className="space-y-2">
-                        <div className="flex items-center justify-between">
-                          <div className="text-xs text-slate-400">可用模型</div>
-                          <div className="text-xs text-slate-500">
-                            {(p.models || []).length} 个
-                          </div>
-                        </div>
-                        <div className="space-y-1">
-                          {(p.models || []).map((model, idx) => {
-                            const testResult = modelsTestStatus[pk]?.type === 'done'
-                              ? modelsTestStatus[pk].results.find((r) => r.model === model)
-                              : null;
+                      {/* 可用模型 */}
+                      <div className="space-y-1">
+                        <div className="text-xs text-slate-400">可用模型 ({(p.models || []).length})</div>
+                        <div className="flex flex-wrap gap-1">
+                          {(p.models || []).map((m, idx) => {
+                            const name = typeof m === 'string' ? m : m.name;
                             return (
-                              <div key={`${model}-${idx}`} className="flex items-center gap-2 bg-slate-900/60 rounded px-2 py-1.5">
-                                <span className="text-xs text-slate-200 font-mono flex-1 truncate">{model}</span>
-                                {testResult && (
-                                  <span className={`text-xs ${testResult.valid ? 'text-green-400' : 'text-red-400'}`} title={testResult.valid ? '可用' : testResult.error}>
-                                    {testResult.valid ? '✅' : '❌'}
-                                  </span>
-                                )}
-                                <button
-                                  className="text-xs text-slate-500 hover:text-red-400 px-1"
-                                  onClick={() => {
-                                    const next = [...(p.models || [])];
-                                    next.splice(idx, 1);
-                                    updateProvider(pk, 'models', next);
-                                  }}
-                                  title="删除"
-                                >
-                                  ×
-                                </button>
-                              </div>
+                              <span key={idx} className="text-xs bg-slate-800 border border-slate-700 rounded px-2 py-0.5 text-slate-300">
+                                {name}
+                              </span>
                             );
                           })}
-                        </div>
-                        <div className="flex gap-2">
-                          <Input
-                            id={`add-model-${pk}`}
-                            placeholder="输入模型名称"
-                            className="text-xs flex-1"
-                            onKeyDown={(e) => {
-                              if (e.key === 'Enter') {
-                                e.preventDefault();
-                                const input = document.getElementById(`add-model-${pk}`);
-                                const val = input?.value?.trim();
-                                if (val && !(p.models || []).includes(val)) {
-                                  updateProvider(pk, 'models', [...(p.models || []), val]);
-                                  input.value = '';
-                                }
-                              }
-                            }}
-                          />
-                          <Button
-                            size="sm"
-                            onClick={() => {
-                              const input = document.getElementById(`add-model-${pk}`);
-                              const val = input?.value?.trim();
-                              if (val && !(p.models || []).includes(val)) {
-                                updateProvider(pk, 'models', [...(p.models || []), val]);
-                                input.value = '';
-                              }
-                            }}
-                          >
-                            添加
-                          </Button>
                         </div>
                       </div>
                     </div>
                   );
                 })}
               </div>
-              <div className="text-xs text-slate-500 mt-2">
-                提示：百炼、Kimi、MiniMax、Doubao 等均通过 OpenAI 兼容接口接入，请将 Provider 类型选择为 openai 并填写对应的 BaseURL 与 API Key。
+              {providerKeys.length === 0 && (
+                <div className="text-xs text-slate-500 text-center py-4">暂无 Provider，点击「添加 Provider」开始配置。可从上方模型库快速选择。</div>
+              )}
+            </div>
+
+            {/* ===== 默认 Provider ===== */}
+            <div className="p-4 bg-slate-900/40 border border-slate-700/40 rounded-lg space-y-3">
+              <h3 className="text-sm font-medium text-slate-200">默认 Provider</h3>
+              <div className="flex items-center gap-3">
+                <select
+                  className="bg-slate-900 border border-slate-700 text-slate-200 text-sm rounded px-2 py-1.5"
+                  value={getModelCfg().defaultProvider || ''}
+                  onChange={(e) => setModelCfg((mc) => ({ ...mc, defaultProvider: e.target.value }))}
+                >
+                  <option value="">-- 未设置 --</option>
+                  {providerKeys.filter((pk) => getModelCfg().providers[pk]?.enabled).map((pk) => (
+                    <option key={pk} value={pk}>{getModelCfg().providers[pk].alias || pk}</option>
+                  ))}
+                </select>
+                <span className="text-xs text-slate-500">角色未指定 Provider 时将使用默认 Provider</span>
               </div>
             </div>
 
+            {/* ===== 角色默认模型与温度 ===== */}
             <div className="p-4 bg-slate-900/40 border border-slate-700/40 rounded-lg space-y-3">
               <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <h3 className="text-sm font-medium text-slate-200">作者轮换模型</h3>
-                  <input
-                    type="checkbox"
-                    checked={!!getModelCfg().writerRotation?.enabled}
-                    onChange={(e) => updateWriterRotation('enabled', e.target.checked)}
-                    className="w-4 h-4 accent-sky-500"
-                  />
-                  <span className="text-xs text-slate-400">{getModelCfg().writerRotation?.enabled ? '已启用' : '未启用'}</span>
-                </div>
-                <Button size="sm" onClick={addRotationItem}>添加模型</Button>
-              </div>
-              <div className="text-xs text-slate-500">
-                启用后，第 1 章使用列表第 1 个模型，第 2 章使用第 2 个模型，依此类推循环切换。同一章内的初稿与改稿将使用同一模型，保证风格一致。
-              </div>
-              <div className="space-y-2">
-                {(getModelCfg().writerRotation?.models || []).map((item, idx) => (
-                  <div key={idx} className="grid grid-cols-1 sm:grid-cols-5 gap-2 items-center p-2 bg-slate-900/60 rounded border border-slate-700/40">
-                    <div className="sm:col-span-1">
-                      <Input value={item.alias || ''} onChange={(e) => updateRotationItem(idx, 'alias', e.target.value)} placeholder="别名" />
-                    </div>
-                    <div className="sm:col-span-1">
-                      <select
-                        value={item.provider || ''}
-                        onChange={(e) => updateRotationItem(idx, 'provider', e.target.value)}
-                        className="w-full bg-slate-900 border border-slate-700 text-slate-200 text-sm rounded px-2 py-1.5"
-                      >
-                        {providerKeys.map((pk) => (
-                          <option key={pk} value={pk}>{getModelCfg().providers[pk].alias || pk}</option>
-                        ))}
-                      </select>
-                    </div>
-                    <div className="sm:col-span-1">
-                      <Input value={item.model || ''} onChange={(e) => updateRotationItem(idx, 'model', e.target.value)} placeholder="模型名称" />
-                    </div>
-                    <div className="sm:col-span-1 flex items-center gap-2">
-                      <input
-                        type="range"
-                        min={0}
-                        max={2}
-                        step={0.05}
-                        value={typeof item.temperature === 'number' ? item.temperature : 0.85}
-                        onChange={(e) => updateRotationItem(idx, 'temperature', parseFloat(e.target.value))}
-                        className="w-24 accent-sky-500"
-                      />
-                      <span className="text-xs text-slate-400 w-10">{(typeof item.temperature === 'number' ? item.temperature : 0.85).toFixed(2)}</span>
-                    </div>
-                    <div className="sm:col-span-1 text-right">
-                      <Button variant="danger" size="sm" onClick={() => removeRotationItem(idx)}>删除</Button>
-                    </div>
-                  </div>
-                ))}
-                {!(getModelCfg().writerRotation?.models || []).length && (
-                  <div className="text-xs text-slate-500 italic">暂无轮换模型，点击“添加模型”开始配置。</div>
-                )}
-              </div>
-            </div>
-
-            <div>
-              <div className="flex items-center justify-between mb-3">
                 <h3 className="text-sm font-medium text-slate-200">角色默认模型与温度</h3>
                 <div className="flex gap-2 flex-wrap">
-                  <Button size="sm" onClick={() => { setShowAddRole(!showAddRole); setShowBatchReplace(false); }}>
-                    {showAddRole ? '取消' : '添加角色'}
-                  </Button>
-                  <Button size="sm" variant="secondary" onClick={() => { setShowBatchReplace(!showBatchReplace); setShowAddRole(false); }}>
-                    {showBatchReplace ? '取消' : '批量替换'}
-                  </Button>
                   <Button size="sm" variant="secondary" onClick={applyBestPracticeTemperatures}>应用最佳实践温度</Button>
                 </div>
               </div>
 
-              {/* 添加角色面板 */}
-              {showAddRole && (
-                <div className="p-3 bg-slate-900/40 border border-slate-700/40 rounded-lg mb-3 space-y-2">
-                  <div className="text-xs text-slate-400">选择要添加的角色</div>
-                  <div className="flex gap-2">
-                    <select
-                      value={newRoleKey}
-                      onChange={(e) => setNewRoleKey(e.target.value)}
-                      className="flex-1 bg-slate-900 border border-slate-700 text-slate-200 text-sm rounded px-2 py-1"
-                    >
-                      <option value="">-- 选择角色 --</option>
-                      {ALL_ROLES.filter((r) => !getModelCfg().roleDefaults?.[r]).map((r) => (
-                        <option key={r} value={r}>{ROLE_LABELS[r]}</option>
-                      ))}
-                    </select>
-                    <Button
-                      size="sm"
-                      disabled={!newRoleKey}
-                      onClick={() => {
-                        if (newRoleKey) {
-                          addRole(newRoleKey);
-                          setNewRoleKey('');
-                          setShowAddRole(false);
-                        }
-                      }}
-                    >
-                      添加
-                    </Button>
-                  </div>
-                  {ALL_ROLES.filter((r) => !getModelCfg().roleDefaults?.[r]).length === 0 && (
-                    <div className="text-xs text-slate-500">所有角色均已配置。</div>
-                  )}
-                </div>
-              )}
-
-              {/* 批量替换面板 */}
-              {showBatchReplace && (
-                <div className="p-3 bg-slate-900/40 border border-slate-700/40 rounded-lg mb-3 space-y-2">
-                  <div className="text-xs text-slate-400">批量替换角色配置</div>
-                  <div className="flex gap-2 flex-wrap items-center">
-                    <select
-                      value={batchReplaceType}
-                      onChange={(e) => { setBatchReplaceType(e.target.value); setBatchReplaceOld(''); setBatchReplaceNew(''); }}
-                      className="bg-slate-900 border border-slate-700 text-slate-200 text-sm rounded px-2 py-1"
-                    >
-                      <option value="provider">替换 Provider</option>
-                      <option value="model">替换模型</option>
-                    </select>
-                    <Input
-                      value={batchReplaceOld}
-                      onChange={(e) => setBatchReplaceOld(e.target.value)}
-                      placeholder={batchReplaceType === 'provider' ? '原 Provider（* 表示全部）' : '原模型名（* 表示全部）'}
-                      className="w-40 text-xs"
+              {/* 批量操作栏 */}
+              <div className="p-3 bg-slate-900/60 border border-slate-700/40 rounded-lg space-y-2">
+                <div className="text-xs text-slate-400">批量设置（勾选下方角色后应用）</div>
+                <div className="flex flex-wrap gap-2 items-center">
+                  <select
+                    className="bg-slate-900 border border-slate-700 text-slate-200 text-sm rounded px-2 py-1"
+                    value={batchProvider}
+                    onChange={(e) => { setBatchProvider(e.target.value); setBatchModel(''); }}
+                  >
+                    <option value="">Provider</option>
+                    {providerKeys.map((pk) => (
+                      <option key={pk} value={pk}>{getModelCfg().providers[pk].alias || pk}</option>
+                    ))}
+                  </select>
+                  <select
+                    className="bg-slate-900 border border-slate-700 text-slate-200 text-sm rounded px-2 py-1"
+                    value={batchModel}
+                    onChange={(e) => setBatchModel(e.target.value)}
+                  >
+                    <option value="">Model</option>
+                    {batchProvider && (getModelCfg().providers[batchProvider]?.models || []).map((m) => {
+                      const id = typeof m === 'string' ? m : m.id;
+                      const name = typeof m === 'string' ? m : m.name;
+                      return <option key={id} value={id}>{name}</option>;
+                    })}
+                  </select>
+                  <div className="flex items-center gap-2">
+                    <input
+                      type="range"
+                      min={0}
+                      max={2}
+                      step={0.05}
+                      value={batchTemperature}
+                      onChange={(e) => setBatchTemperature(parseFloat(e.target.value))}
+                      className="w-20 accent-sky-500"
                     />
-                    <span className="text-xs text-slate-500">→</span>
-                    <Input
-                      value={batchReplaceNew}
-                      onChange={(e) => setBatchReplaceNew(e.target.value)}
-                      placeholder={batchReplaceType === 'provider' ? '新 Provider' : '新模型名'}
-                      className="w-40 text-xs"
-                    />
-                    <Button
-                      size="sm"
-                      disabled={!batchReplaceOld || !batchReplaceNew}
-                      onClick={() => {
-                        if (batchReplaceType === 'provider') {
-                          batchReplaceRoleProvider(batchReplaceOld, batchReplaceNew);
-                        } else {
-                          batchReplaceRoleModel(batchReplaceOld, batchReplaceNew);
-                        }
-                        setBatchReplaceOld('');
-                        setBatchReplaceNew('');
-                        setShowBatchReplace(false);
-                      }}
-                    >
-                      确认替换
-                    </Button>
+                    <span className="text-xs text-slate-400 w-10">{batchTemperature.toFixed(2)}</span>
                   </div>
+                  <Button
+                    size="sm"
+                    disabled={selectedRoles.length === 0}
+                    onClick={() => {
+                      setModelCfg((mc) => {
+                        const roles = { ...mc.roleDefaults };
+                        selectedRoles.forEach((role) => {
+                          roles[role] = {
+                            ...roles[role],
+                            ...(batchProvider ? { provider: batchProvider } : {}),
+                            ...(batchModel ? { model: batchModel } : {}),
+                            temperature: batchTemperature,
+                          };
+                        });
+                        return { ...mc, roleDefaults: roles };
+                      });
+                      setSelectedRoles([]);
+                    }}
+                  >
+                    应用到 {selectedRoles.length} 个角色
+                  </Button>
                 </div>
-              )}
+              </div>
 
               <div className="overflow-x-auto">
                 <table className="min-w-full text-sm border border-slate-700/40 rounded-lg">
                   <thead className="bg-slate-900/60 text-slate-300">
                     <tr>
+                      <th className="text-left px-2 py-2 font-medium w-8">
+                        <input
+                          type="checkbox"
+                          checked={selectedRoles.length === ALL_ROLES.length && ALL_ROLES.length > 0}
+                          onChange={(e) => setSelectedRoles(e.target.checked ? [...ALL_ROLES] : [])}
+                          className="w-4 h-4 accent-sky-500"
+                        />
+                      </th>
                       <th className="text-left px-3 py-2 font-medium">角色</th>
                       <th className="text-left px-3 py-2 font-medium">Provider</th>
                       <th className="text-left px-3 py-2 font-medium">模型</th>
                       <th className="text-left px-3 py-2 font-medium">温度</th>
-                      <th className="text-left px-3 py-2 font-medium w-16">操作</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-slate-700/40">
-                    {roleEntries.map(([role, cfg]) => (
-                      <tr key={role} className="bg-slate-900/20">
-                        <td className="px-3 py-2 text-slate-200 whitespace-nowrap">{ROLE_LABELS[role] || role}</td>
-                        <td className="px-3 py-2">
+                    {ALL_ROLES.map((role) => {
+                      const cfg = getModelCfg().roleDefaults?.[role] || { provider: '', model: '', temperature: 0.7 };
+                      const currentProvider = cfg.provider || getModelCfg().defaultProvider || '';
+                      const availableModels = currentProvider ? (getModelCfg().providers[currentProvider]?.models || []) : [];
+                      return (
+                        <tr key={role} className="bg-slate-900/20">
+                          <td className="px-2 py-2">
+                            <input
+                              type="checkbox"
+                              checked={selectedRoles.includes(role)}
+                              onChange={(e) => {
+                                if (e.target.checked) {
+                                  setSelectedRoles((prev) => [...prev, role]);
+                                } else {
+                                  setSelectedRoles((prev) => prev.filter((r) => r !== role));
+                                }
+                              }}
+                              className="w-4 h-4 accent-sky-500"
+                            />
+                          </td>
+                          <td className="px-3 py-2 text-slate-200 whitespace-nowrap text-xs">{ROLE_LABELS[role] || role}</td>
+                          <td className="px-3 py-2">
+                            <select
+                              value={cfg.provider || ''}
+                              onChange={(e) => updateRole(role, 'provider', e.target.value)}
+                              className="bg-slate-900 border border-slate-700 text-slate-200 text-xs rounded px-2 py-1"
+                            >
+                              <option value="">跟随默认</option>
+                              {providerKeys.map((pk) => (
+                                <option key={pk} value={pk}>{getModelCfg().providers[pk].alias || pk}</option>
+                              ))}
+                            </select>
+                          </td>
+                          <td className="px-3 py-2">
+                            <select
+                              value={cfg.model || ''}
+                              onChange={(e) => updateRole(role, 'model', e.target.value)}
+                              className="bg-slate-900 border border-slate-700 text-slate-200 text-xs rounded px-2 py-1 w-40"
+                            >
+                              <option value="">跟随 Provider 默认</option>
+                              {availableModels.map((m) => {
+                                const id = typeof m === 'string' ? m : m.id;
+                                const name = typeof m === 'string' ? m : m.name;
+                                return <option key={id} value={id}>{name}</option>;
+                              })}
+                            </select>
+                          </td>
+                          <td className="px-3 py-2">
+                            <div className="flex items-center gap-2">
+                              <input
+                                type="range"
+                                min={0}
+                                max={2}
+                                step={0.05}
+                                value={typeof cfg.temperature === 'number' ? cfg.temperature : 0.7}
+                                onChange={(e) => updateRole(role, 'temperature', parseFloat(e.target.value))}
+                                className="w-20 accent-sky-500"
+                              />
+                              <span className="text-xs text-slate-400 w-10">{(typeof cfg.temperature === 'number' ? cfg.temperature : 0.7).toFixed(2)}</span>
+                            </div>
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+              <div className="text-xs text-slate-500">
+                最佳实践：创作类角色（作者、编辑、润色）建议温度 0.8~0.9；审核/评审/结构类角色建议温度 0~0.3，以降低幻觉并提高稳定性。Provider 留空则跟随「默认 Provider」，模型留空则跟随该 Provider 的第一个可用模型。
+              </div>
+            </div>
+
+            {/* ===== 作家轮换（高级选项） ===== */}
+            <div className="p-4 bg-slate-900/40 border border-slate-700/40 rounded-lg space-y-3">
+              <div className="flex items-center justify-between cursor-pointer" onClick={() => setShowAdvanced(!showAdvanced)}>
+                <h3 className="text-sm font-medium text-slate-200">高级选项：作家轮换模型</h3>
+                <span className="text-xs text-slate-500">{showAdvanced ? '收起 ▲' : '展开 ▼'}</span>
+              </div>
+              {showAdvanced && (
+                <div className="space-y-3">
+                  <div className="flex items-center gap-2">
+                    <input
+                      type="checkbox"
+                      checked={!!getModelCfg().writerRotation?.enabled}
+                      onChange={(e) => updateWriterRotation('enabled', e.target.checked)}
+                      className="w-4 h-4 accent-sky-500"
+                    />
+                    <span className="text-xs text-slate-400">{getModelCfg().writerRotation?.enabled ? '已启用' : '未启用'}</span>
+                  </div>
+                  <div className="text-xs text-slate-500">
+                    启用后，第 1 章使用列表第 1 个模型，第 2 章使用第 2 个模型，依此类推循环切换。
+                  </div>
+                  <div className="space-y-2">
+                    {(getModelCfg().writerRotation?.models || []).map((item, idx) => (
+                      <div key={idx} className="grid grid-cols-1 sm:grid-cols-5 gap-2 items-center p-2 bg-slate-900/60 rounded border border-slate-700/40">
+                        <div className="sm:col-span-1">
+                          <Input value={item.alias || ''} onChange={(e) => updateRotationItem(idx, 'alias', e.target.value)} placeholder="别名" />
+                        </div>
+                        <div className="sm:col-span-1">
                           <select
-                            value={cfg.provider || ''}
-                            onChange={(e) => updateRole(role, 'provider', e.target.value)}
-                            className="bg-slate-900 border border-slate-700 text-slate-200 text-sm rounded px-2 py-1"
+                            value={item.provider || ''}
+                            onChange={(e) => updateRotationItem(idx, 'provider', e.target.value)}
+                            className="w-full bg-slate-900 border border-slate-700 text-slate-200 text-sm rounded px-2 py-1.5"
                           >
                             {providerKeys.map((pk) => (
                               <option key={pk} value={pk}>{getModelCfg().providers[pk].alias || pk}</option>
                             ))}
                           </select>
-                        </td>
-                        <td className="px-3 py-2">
-                          <Input value={cfg.model || ''} onChange={(e) => updateRole(role, 'model', e.target.value)} placeholder="模型名称" className="w-40" />
-                        </td>
-                        <td className="px-3 py-2">
-                          <div className="flex items-center gap-3">
-                            <input
-                              type="range"
-                              min={0}
-                              max={2}
-                              step={0.05}
-                              value={typeof cfg.temperature === 'number' ? cfg.temperature : 0.7}
-                              onChange={(e) => updateRole(role, 'temperature', parseFloat(e.target.value))}
-                              className="w-24 accent-sky-500"
-                            />
-                            <span className="text-xs text-slate-400 w-10">{(typeof cfg.temperature === 'number' ? cfg.temperature : 0.7).toFixed(2)}</span>
-                          </div>
-                        </td>
-                        <td className="px-3 py-2">
-                          <button
-                            className="text-xs text-slate-500 hover:text-red-400 px-1"
-                            onClick={() => removeRole(role)}
-                            title="删除"
+                        </div>
+                        <div className="sm:col-span-1">
+                          <select
+                            value={item.model || ''}
+                            onChange={(e) => updateRotationItem(idx, 'model', e.target.value)}
+                            className="w-full bg-slate-900 border border-slate-700 text-slate-200 text-sm rounded px-2 py-1.5"
                           >
-                            ×
-                          </button>
-                        </td>
-                      </tr>
+                            <option value="">选择模型</option>
+                            {item.provider && (getModelCfg().providers[item.provider]?.models || []).map((m) => {
+                              const id = typeof m === 'string' ? m : m.id;
+                              const name = typeof m === 'string' ? m : m.name;
+                              return <option key={id} value={id}>{name}</option>;
+                            })}
+                          </select>
+                        </div>
+                        <div className="sm:col-span-1 flex items-center gap-2">
+                          <input
+                            type="range"
+                            min={0}
+                            max={2}
+                            step={0.05}
+                            value={typeof item.temperature === 'number' ? item.temperature : 0.85}
+                            onChange={(e) => updateRotationItem(idx, 'temperature', parseFloat(e.target.value))}
+                            className="w-24 accent-sky-500"
+                          />
+                          <span className="text-xs text-slate-400 w-10">{(typeof item.temperature === 'number' ? item.temperature : 0.85).toFixed(2)}</span>
+                        </div>
+                        <div className="sm:col-span-1 text-right">
+                          <Button variant="danger" size="sm" onClick={() => removeRotationItem(idx)}>删除</Button>
+                        </div>
+                      </div>
                     ))}
-                    {roleEntries.length === 0 && (
-                      <tr>
-                        <td colSpan={5} className="px-3 py-4 text-xs text-slate-500 text-center">暂无角色配置，点击「添加角色」开始配置。</td>
-                      </tr>
+                    {!(getModelCfg().writerRotation?.models || []).length && (
+                      <div className="text-xs text-slate-500 italic">暂无轮换模型，点击「添加模型」开始配置。</div>
                     )}
-                  </tbody>
-                </table>
-              </div>
-              <div className="text-xs text-slate-500 mt-2">
-                最佳实践：创作类角色（作者、编辑、润色）建议温度 0.8~0.9；审核/评审/结构类角色建议温度 0~0.3，以降低幻觉并提高稳定性。
-              </div>
+                  </div>
+                  <Button size="sm" onClick={addRotationItem}>添加模型</Button>
+                </div>
+              )}
             </div>
           </div>
         )}
