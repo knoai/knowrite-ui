@@ -675,6 +675,23 @@ export function SettingsPage() {
                         <div className="text-xs text-red-400">❌ 测试失败：{testStatus[pk].msg}</div>
                       )}
 
+                      {/* 默认模型 */}
+                      <div className="flex items-center gap-2">
+                        <span className="text-xs text-slate-400">默认模型</span>
+                        <select
+                          className="bg-slate-900 border border-slate-700 text-slate-200 text-xs rounded px-2 py-1 flex-1"
+                          value={p.defaultModel || ''}
+                          onChange={(e) => updateProvider(pk, 'defaultModel', e.target.value)}
+                        >
+                          <option value="">使用第一个可用模型</option>
+                          {(p.models || []).map((m) => {
+                            const id = typeof m === 'string' ? m : m.id;
+                            const name = typeof m === 'string' ? m : m.name;
+                            return <option key={id} value={id}>{name}</option>;
+                          })}
+                        </select>
+                      </div>
+
                       {/* 可用模型 */}
                       <div className="space-y-1">
                         <div className="text-xs text-slate-400">可用模型 ({(p.models || []).length})</div>
@@ -874,7 +891,7 @@ export function SettingsPage() {
                 </table>
               </div>
               <div className="text-xs text-slate-500">
-                最佳实践：创作类角色（作者、编辑、润色）建议温度 0.8~0.9；审核/评审/结构类角色建议温度 0~0.3，以降低幻觉并提高稳定性。Provider 留空则跟随「默认 Provider」，模型留空则跟随该 Provider 的第一个可用模型。
+                最佳实践：创作类角色（作者、编辑、润色）建议温度 0.8~0.9；审核/评审/结构类角色建议温度 0~0.3，以降低幻觉并提高稳定性。Provider 留空则跟随「默认 Provider」，模型留空则跟随该 Provider 的默认模型（未设置则使用第一个可用模型）。
               </div>
             </div>
 
