@@ -2,6 +2,7 @@ import { Routes, Route } from 'react-router-dom';
 import { WorkProvider } from './contexts/WorkContext';
 import { ToastProvider } from './components/ui/Toast';
 import { Layout } from './components/Layout';
+import { LogPanel } from './components/LogPanel';
 import { CreatePage } from './pages/CreatePage';
 import { TryCreatePage } from './pages/TryCreatePage';
 import { WorksPage } from './pages/WorksPage';
@@ -29,6 +30,7 @@ function App() {
             <Route path="guide" element={<GuidePage />} />
           </Route>
         </Routes>
+        <LogPanel />
       </ToastProvider>
     </WorkProvider>
   );
