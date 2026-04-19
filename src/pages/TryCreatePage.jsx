@@ -29,6 +29,8 @@ export function TryCreatePage() {
   const [writingMode, setWritingMode] = useState('industrial');
   const [platformStyles, setPlatformStyles] = useState([]);
   const [authorStyles, setAuthorStyles] = useState([]);
+  const [storyTemplates, setStoryTemplates] = useState([]);
+  const [selectedTemplate, setSelectedTemplate] = useState('');
   const [workId, setWorkId] = useState(null);
   const [expandedStage, setExpandedStage] = useState(null);
   const abortRef = useRef(null);
@@ -44,6 +46,7 @@ export function TryCreatePage() {
     api.getPlatformStyles().then(d => setPlatformStyles(d.platformStyles || [])).catch(() => {});
     api.getAuthorStyles().then(d => setAuthorStyles(d.authorStyles || [])).catch(() => {});
     api.getWritingMode().then(d => setWritingMode(d.writingMode || 'industrial')).catch(() => {});
+    api.getStoryTemplates().then(d => setStoryTemplates(d.items || [])).catch(() => {});
   }, []);
 
   const updateStage = (key, updater) => {
@@ -88,7 +91,7 @@ export function TryCreatePage() {
 
       if (key === 'outline') {
         await api.tryCreateOutline({
-          topic: topic.trim(), platformStyle, authorStyle, strategy, writingMode,
+          topic: topic.trim(), platformStyle, authorStyle, strategy, writingMode, storyTemplate: selectedTemplate || undefined,
         }, (chunk) => {
           setStageState(prev => ({ ...prev, outline: { ...prev.outline, text: prev.outline.text + chunk } }));
         }, controller.signal, onEvent);
@@ -230,6 +233,21 @@ export function TryCreatePage() {
                 ))}
               </div>
             </div>
+            {storyTemplates.length > 0 && (
+              <div>
+                <label className="block text-sm text-slate-300 mb-1">套路模版（可选）</label>
+                <select
+                  value={selectedTemplate}
+                  onChange={(e) => setSelectedTemplate(e.target.value)}
+                  className="w-full bg-slate-900 border border-slate-700 text-slate-200 text-sm rounded-lg px-3 py-2"
+                >
+                  <option value="">无套路 — 自由创作</option>
+                  {storyTemplates.map((t) => (
+                    <option key={t.id} value={t.id}>{t.name} ({t.category})</option>
+                  ))}
+                </select>
+              </div>
+            )}
           </div>
         </div>
       </Card>

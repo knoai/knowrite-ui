@@ -43,6 +43,8 @@ export function CreatePage() {
   const [writingMode, setWritingMode] = useState('industrial');
   const [platformStyles, setPlatformStyles] = useState([]);
   const [authorStyles, setAuthorStyles] = useState([]);
+  const [storyTemplates, setStoryTemplates] = useState([]);
+  const [selectedTemplate, setSelectedTemplate] = useState('');
 
   // Step 3
   const [showAdvanced, setShowAdvanced] = useState(false);
@@ -67,6 +69,7 @@ export function CreatePage() {
     api.getPlatformStyles().then(d => setPlatformStyles(d.platformStyles || [])).catch(() => {});
     api.getAuthorStyles().then(d => setAuthorStyles(d.authorStyles || [])).catch(() => {});
     api.getWritingMode().then(d => setWritingMode(d.writingMode || 'industrial')).catch(() => {});
+    api.getStoryTemplates().then(d => setStoryTemplates(d.items || [])).catch(() => {});
   }, [refreshWorks]);
 
   const handleStart = async () => {
@@ -75,7 +78,7 @@ export function CreatePage() {
     const controller = new AbortController();
     try {
       await api.startNovel({
-        topic: topic.trim(), platformStyle, authorStyle, strategy, writingMode,
+        topic: topic.trim(), platformStyle, authorStyle, strategy, writingMode, storyTemplate: selectedTemplate || undefined,
         customModels: { outline: modelOutline || undefined, chapter: modelChapter || undefined, polish: modelPolish || undefined }
       }, (chunk) => setStreamText(t => t + chunk), controller.signal, (ev) => {
         if (ev.type === 'stepStart') {
@@ -296,6 +299,40 @@ export function CreatePage() {
                 </div>
               </div>
 
+              {/* Story Template */}
+              {storyTemplates.length > 0 && (
+                <div>
+                  <label className="block text-sm font-medium text-slate-200 mb-2">套路模版（可选）</label>
+                  <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2">
+                    <button
+                      onClick={() => setSelectedTemplate('')}
+                      className={`p-3 rounded-xl border text-left transition-all ${
+                        !selectedTemplate
+                          ? 'bg-emerald-500/10 border-emerald-500/40 text-emerald-300'
+                          : 'bg-slate-800/30 border-slate-700/40 text-slate-400 hover:border-slate-600 hover:text-slate-300'
+                      }`}
+                    >
+                      <div className="font-medium text-sm">无套路</div>
+                      <div className="text-[10px] text-slate-500 mt-0.5">自由创作</div>
+                    </button>
+                    {storyTemplates.map(t => (
+                      <button
+                        key={t.id}
+                        onClick={() => setSelectedTemplate(String(t.id))}
+                        className={`p-3 rounded-xl border text-left transition-all ${
+                          selectedTemplate === String(t.id)
+                            ? 'bg-emerald-500/10 border-emerald-500/40 text-emerald-300'
+                            : 'bg-slate-800/30 border-slate-700/40 text-slate-400 hover:border-slate-600 hover:text-slate-300'
+                        }`}
+                      >
+                        <div className="font-medium text-sm">{t.name}</div>
+                        <div className="text-[10px] text-slate-500 mt-0.5 line-clamp-2">{t.description?.slice(0, 30) || t.category}...</div>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+
               <div className="flex justify-between pt-2">
                 <Button variant="default" onClick={() => setStep(0)}>
                   <ArrowLeft size={16} /> 上一步
@@ -337,6 +374,12 @@ export function CreatePage() {
                       {writingMode === 'free' ? '自由风' : '工业风'}
                     </span>
                   </div>
+                  {selectedTemplate && (
+                    <div className="flex items-center gap-2">
+                      <span className="text-slate-500 w-16 shrink-0">套路</span>
+                      <span className="text-emerald-400">{storyTemplates.find(t => String(t.id) === selectedTemplate)?.name || '已选'}</span>
+                    </div>
+                  )}
                 </div>
               </div>
 
