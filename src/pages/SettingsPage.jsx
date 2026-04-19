@@ -537,10 +537,7 @@ export function SettingsPage() {
                   />
                   <div className="flex gap-2">
                     <Button size="sm" onClick={() => {
-                      const models = libForm.modelsText.split('\n').map((l) => l.trim()).filter(Boolean).map((l) => {
-                        const [id, ...nameParts] = l.split('|');
-                        return { id: id.trim(), name: (nameParts.join('|') || id).trim() };
-                      });
+                      const models = libForm.modelsText.split('\n').map((l) => l.trim()).filter(Boolean);
                       const entry = { key: libForm.key, name: libForm.name, url: libForm.url, models };
                       const next = [...modelLibrary];
                       if (editingLibIndex >= 0) {
@@ -584,7 +581,7 @@ export function SettingsPage() {
                                 key: lib.key,
                                 name: lib.name,
                                 url: lib.url || '',
-                                modelsText: (lib.models || []).map((m) => `${m.id}|${m.name}`).join('\n'),
+                                modelsText: (lib.models || []).join('\n'),
                               });
                             }}>编辑</button>
                             <button className="text-xs text-slate-500 hover:text-red-400" onClick={() => {
@@ -643,12 +640,12 @@ export function SettingsPage() {
                             value=""
                             onChange={(e) => {
                               const key = e.target.value;
-                              if (!key) return;
+                              if (!key || key === '__custom__') return;
                               const lib = modelLibrary.find((l) => l.key === key);
                               if (lib) {
                                 updateProvider(pk, 'alias', lib.name);
                                 updateProvider(pk, 'baseURL', lib.url);
-                                updateProvider(pk, 'models', lib.models || []);
+                                updateProvider(pk, 'models', [...(lib.models || [])]);
                               }
                               e.target.value = '';
                             }}
@@ -684,26 +681,60 @@ export function SettingsPage() {
                           onChange={(e) => updateProvider(pk, 'defaultModel', e.target.value)}
                         >
                           <option value="">使用第一个可用模型</option>
-                          {(p.models || []).map((m) => {
-                            const id = typeof m === 'string' ? m : m.id;
-                            const name = typeof m === 'string' ? m : m.name;
-                            return <option key={id} value={id}>{name}</option>;
-                          })}
+                          {(p.models || []).map((m) => (
+                            <option key={m} value={m}>{m}</option>
+                          ))}
                         </select>
                       </div>
 
                       {/* 可用模型 */}
-                      <div className="space-y-1">
+                      <div className="space-y-2">
                         <div className="text-xs text-slate-400">可用模型 ({(p.models || []).length})</div>
                         <div className="flex flex-wrap gap-1">
-                          {(p.models || []).map((m, idx) => {
-                            const name = typeof m === 'string' ? m : m.name;
-                            return (
-                              <span key={idx} className="text-xs bg-slate-800 border border-slate-700 rounded px-2 py-0.5 text-slate-300">
-                                {name}
-                              </span>
-                            );
-                          })}
+                          {(p.models || []).map((m, idx) => (
+                            <span key={idx} className="text-xs bg-slate-800 border border-slate-700 rounded px-2 py-0.5 text-slate-300 flex items-center gap-1">
+                              {m}
+                              <button
+                                className="text-slate-500 hover:text-red-400"
+                                onClick={() => {
+                                  const next = [...(p.models || [])];
+                                  next.splice(idx, 1);
+                                  updateProvider(pk, 'models', next);
+                                }}
+                              >×</button>
+                            </span>
+                          ))}
+                        </div>
+                        <div className="flex gap-2">
+                          <Input
+                            id={`add-model-${pk}`}
+                            placeholder="输入模型 ID（如 qwen3:4b）"
+                            className="text-xs flex-1"
+                            onKeyDown={(e) => {
+                              if (e.key === 'Enter') {
+                                e.preventDefault();
+                                const input = document.getElementById(`add-model-${pk}`);
+                                const val = input?.value?.trim();
+                                if (val && !(p.models || []).includes(val)) {
+                                  updateProvider(pk, 'models', [...(p.models || []), val]);
+                                  input.value = '';
+                                }
+                              }
+                            }}
+                          />
+                          <Button
+                            size="sm"
+                            onClick={() => {
+                              const input = document.getElementById(`add-model-${pk}`);
+                              const val = input?.value?.trim();
+                              if (val && !(p.models || []).includes(val)) {
+                                updateProvider(pk, 'models', [...(p.models || []), val]);
+                                input.value = '';
+                              }
+                            }}
+                          >
+                            添加
+                          </Button>
                         </div>
                       </div>
                     </div>
@@ -762,11 +793,9 @@ export function SettingsPage() {
                     onChange={(e) => setBatchModel(e.target.value)}
                   >
                     <option value="">Model</option>
-                    {batchProvider && (getModelCfg().providers[batchProvider]?.models || []).map((m) => {
-                      const id = typeof m === 'string' ? m : m.id;
-                      const name = typeof m === 'string' ? m : m.name;
-                      return <option key={id} value={id}>{name}</option>;
-                    })}
+                    {batchProvider && (getModelCfg().providers[batchProvider]?.models || []).map((m) => (
+                      <option key={m} value={m}>{m}</option>
+                    ))}
                   </select>
                   <div className="flex items-center gap-2">
                     <input
@@ -863,11 +892,9 @@ export function SettingsPage() {
                               className="bg-slate-900 border border-slate-700 text-slate-200 text-xs rounded px-2 py-1 w-40"
                             >
                               <option value="">跟随 Provider 默认</option>
-                              {availableModels.map((m) => {
-                                const id = typeof m === 'string' ? m : m.id;
-                                const name = typeof m === 'string' ? m : m.name;
-                                return <option key={id} value={id}>{name}</option>;
-                              })}
+                              {availableModels.map((m) => (
+                                <option key={m} value={m}>{m}</option>
+                              ))}
                             </select>
                           </td>
                           <td className="px-3 py-2">
@@ -939,11 +966,9 @@ export function SettingsPage() {
                             className="w-full bg-slate-900 border border-slate-700 text-slate-200 text-sm rounded px-2 py-1.5"
                           >
                             <option value="">选择模型</option>
-                            {item.provider && (getModelCfg().providers[item.provider]?.models || []).map((m) => {
-                              const id = typeof m === 'string' ? m : m.id;
-                              const name = typeof m === 'string' ? m : m.name;
-                              return <option key={id} value={id}>{name}</option>;
-                            })}
+                            {item.provider && (getModelCfg().providers[item.provider]?.models || []).map((m) => (
+                              <option key={m} value={m}>{m}</option>
+                            ))}
                           </select>
                         </div>
                         <div className="sm:col-span-1 flex items-center gap-2">
