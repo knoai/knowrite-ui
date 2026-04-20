@@ -28,28 +28,48 @@ export function LogPanel() {
   }, [expanded]);
 
   useEffect(() => {
-    const es = new EventSource(`${API_BASE}/api/logs/stream`);
-    esRef.current = es;
+    let errorCount = 0;
+    let errorTimer = null;
+    let es = null;
 
-    es.onmessage = (e) => {
-      try {
-        const data = JSON.parse(e.data);
-        if (data.type === 'history' && Array.isArray(data.logs)) {
-          setLogs(data.logs.slice(-MAX_LOGS));
-        } else if (data.type === 'log') {
-          addLog(data);
+    const connect = () => {
+      es = new EventSource(`${API_BASE}/api/logs/stream`);
+      esRef.current = es;
+
+      es.onmessage = (e) => {
+        try {
+          const data = JSON.parse(e.data);
+          if (data.type === 'history' && Array.isArray(data.logs)) {
+            setLogs(data.logs.slice(-MAX_LOGS));
+          } else if (data.type === 'log') {
+            addLog(data);
+          }
+        } catch {
+          // ignore malformed
         }
-      } catch {
-        // ignore malformed
-      }
+      };
+
+      es.onerror = () => {
+        errorCount += 1;
+        if (!errorTimer) {
+          errorTimer = setTimeout(() => {
+            errorCount = 0;
+            errorTimer = null;
+          }, 10000);
+        }
+        // 10 秒内连续错误超过 3 次，停止自动重连
+        if (errorCount > 3) {
+          console.warn('[LogPanel] SSE 连接异常，停止自动重连');
+          es.close();
+        }
+      };
     };
 
-    es.onerror = () => {
-      // 自动重连
-    };
+    connect();
 
     return () => {
-      es.close();
+      if (errorTimer) clearTimeout(errorTimer);
+      if (es) es.close();
     };
   }, [addLog]);
 
