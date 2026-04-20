@@ -450,3 +450,45 @@ async function postStream(url, body, onChunk, signal, onEvent) {
     }
   }
 }
+
+// ===================== 对话式创作 API =====================
+export async function chatAgent(workId, messages, onChunk, signal) {
+  return postStream(
+    `${API_BASE}/api/chat-agent/works/${encodeURIComponent(workId)}`,
+    { messages },
+    onChunk,
+    signal
+  );
+}
+
+// ===================== 拆书 API =====================
+export async function deconstructBook(text, options = {}) {
+  const res = await fetch(`${API_BASE}/api/book-deconstruct`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ text, ...options }),
+  });
+  if (!res.ok) throw new Error(await res.text());
+  return res.json();
+}
+
+export async function getDeconstructHistory() {
+  return getJson(`${API_BASE}/api/book-deconstruct`);
+}
+
+// ===================== 声纹 & 角色记忆 API =====================
+export async function getVoiceFingerprints(workId) {
+  return getJson(workUrl(workId, '/voice-fingerprints'));
+}
+
+export async function getCharacterMemories(workId) {
+  return getJson(workUrl(workId, '/character-memories'));
+}
+
+export async function refreshCharacterMemories(workId) {
+  return postJson(workUrl(workId, '/character-memories/refresh'), {});
+}
+
+export async function getSkillInjection(workId) {
+  return getJson(workUrl(workId, '/skill-injection'));
+}

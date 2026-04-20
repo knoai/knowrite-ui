@@ -8,8 +8,11 @@ import { TryCreatePage } from './pages/TryCreatePage';
 import { WorksPage } from './pages/WorksPage';
 import { EvolvePage } from './pages/EvolvePage';
 import { ChatPage } from './pages/ChatPage';
+import { AgentChatPage } from './pages/AgentChatPage';
 import { SettingsPage } from './pages/SettingsPage';
 import { TemplatesPage } from './pages/TemplatesPage';
+import { DeconstructPage } from './pages/DeconstructPage';
+import { MemoryPage } from './pages/MemoryPage';
 import { GuidePage } from './pages/GuidePage';
 
 function App() {
@@ -25,8 +28,11 @@ function App() {
             <Route path="works/:workId" element={<WorksPage />} />
             <Route path="evolve" element={<EvolvePage />} />
             <Route path="chat" element={<ChatPage />} />
+            <Route path="agent-chat" element={<AgentChatPage />} />
             <Route path="settings" element={<SettingsPage />} />
             <Route path="templates" element={<TemplatesPage />} />
+            <Route path="deconstruct" element={<DeconstructPage />} />
+            <Route path="memory/:workId" element={<MemoryPage />} />
             <Route path="guide" element={<GuidePage />} />
           </Route>
         </Routes>

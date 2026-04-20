@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { ArrowLeft, Play, Download, BookOpen, Users, GitBranch, Map, Sparkles, BarChart3, ClipboardCheck, FileText, Plus, ChevronDown, ChevronRight, AlignLeft, ListTree } from 'lucide-react';
+import { ArrowLeft, Play, Download, BookOpen, Users, GitBranch, Map, Sparkles, BarChart3, ClipboardCheck, FileText, Plus, ChevronDown, ChevronRight, AlignLeft, ListTree, BrainCircuit } from 'lucide-react';
 import { Card, CardTitle, CardHeader } from '../components/ui/Card';
 import { Button } from '../components/ui/Button';
 import { Badge } from '../components/ui/Badge';
@@ -229,6 +229,10 @@ export function WorksPage() {
             <Button variant="primary" size="sm" onClick={handleContinue} disabled={continuing}>
               <Play size={14} />
               {continuing ? '续写中...' : '续写下一章'}
+            </Button>
+            <Button variant="ghost" size="sm" onClick={() => navigate(`/memory/${workId}`)}>
+              <BrainCircuit size={14} />
+              记忆
             </Button>
             <Button variant="accent" size="sm" onClick={handleExport}>
               <Download size={14} />
