@@ -530,6 +530,14 @@ export async function deleteAgentModel(role) {
   return res.json();
 }
 
+export async function deleteWork(workId) {
+  const res = await fetch(`${API_BASE}/api/novel/works/${encodeURIComponent(workId)}`, {
+    method: 'DELETE',
+  });
+  if (!res.ok) throw new Error(await res.text());
+  return res.json();
+}
+
 // ===================== Engine Pipeline 配置 API =====================
 export async function getEnginePipeline() {
   return getJson(`${API_BASE}/api/novel/engine/pipeline`);

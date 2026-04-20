@@ -1,7 +1,7 @@
 import { Badge } from './ui/Badge';
-import { BookOpen, ArrowRight } from 'lucide-react';
+import { BookOpen, ArrowRight, Trash2 } from 'lucide-react';
 
-export function WorkCard({ work, onClick }) {
+export function WorkCard({ work, onClick, onDelete }) {
   let strategyLabel = 'Single';
   let variant = 'default';
   if (work.strategy === 'knowrite') { strategyLabel = '多Agent'; variant = 'info'; }
@@ -40,6 +40,15 @@ export function WorkCard({ work, onClick }) {
       <div className="self-center text-slate-600 group-hover:text-sky-400 transition">
         <ArrowRight size={16} />
       </div>
+      {onDelete && (
+        <button
+          onClick={(e) => { e.stopPropagation(); onDelete(work.workId); }}
+          className="self-center p-1.5 rounded-lg text-slate-500 hover:text-red-400 hover:bg-red-500/10 transition opacity-0 group-hover:opacity-100"
+          title="删除作品"
+        >
+          <Trash2 size={16} />
+        </button>
+      )}
     </div>
   );
 }

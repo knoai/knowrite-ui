@@ -80,6 +80,17 @@ export function WorksPage() {
   const handleSelect = (id) => navigate(`/works/${id}`);
   const handleBack = () => navigate('/works');
 
+  const handleDelete = async (id) => {
+    if (!window.confirm(`确定要删除作品「${id}」吗？此操作不可撤销。`)) return;
+    try {
+      await api.deleteWork(id);
+      await refreshWorks();
+      setStatus('作品已删除');
+    } catch (e) {
+      setStatus('删除失败: ' + e.message);
+    }
+  };
+
   const handleContinue = async () => {
     if (!currentWorkId) return;
     // Plan 模式：先检查是否需要预演
@@ -228,7 +239,7 @@ export function WorksPage() {
             {!loadingWorks && works.length > 0 && (
               <div className="grid grid-cols-1 gap-3">
                 {works.map((w) => (
-                  <WorkCard key={w.workId} work={w} onClick={() => handleSelect(w.workId)} />
+                  <WorkCard key={w.workId} work={w} onClick={() => handleSelect(w.workId)} onDelete={handleDelete} />
                 ))}
               </div>
             )}
