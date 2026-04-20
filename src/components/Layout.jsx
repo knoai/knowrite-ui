@@ -1,5 +1,5 @@
 import { NavLink, Outlet, useLocation } from 'react-router-dom';
-import { BookOpen, Library, Wrench, Settings, HelpCircle, ChevronDown, Bot, Sparkles, MessageCircle, Layers, FlaskConical, BookMarked, BrainCircuit } from 'lucide-react';
+import { BookOpen, Library, Wrench, Settings, HelpCircle, ChevronDown, Bot, Sparkles, MessageCircle, Layers, FlaskConical, BookMarked, BrainCircuit, Activity, Lightbulb } from 'lucide-react';
 import { useState } from 'react';
 
 const mainNav = [
@@ -11,9 +11,11 @@ const mainNav = [
 const toolNav = [
   { to: '/chat', label: 'AI 对话', icon: MessageCircle },
   { to: '/agent-chat', label: '对话创作', icon: Bot },
+  { to: '/plan', label: '章节预演', icon: Lightbulb },
   { to: '/evolve', label: 'Prompt 进化', icon: Sparkles },
   { to: '/templates', label: '套路库', icon: Layers },
   { to: '/deconstruct', label: '拆书分析', icon: BookMarked },
+  { to: '/traces', label: 'Trace 调试', icon: Activity },
 ];
 
 export function Layout() {

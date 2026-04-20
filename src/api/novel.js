@@ -492,3 +492,80 @@ export async function refreshCharacterMemories(workId) {
 export async function getSkillInjection(workId) {
   return getJson(workUrl(workId, '/skill-injection'));
 }
+
+// ===================== Agent 模型配置 API =====================
+export async function getAgentModels() {
+  return getJson(`${API_BASE}/api/novel/settings/agent-models`);
+}
+
+export async function saveAgentModels(agentModels) {
+  const res = await fetch(`${API_BASE}/api/novel/settings/agent-models`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(agentModels),
+  });
+  if (!res.ok) throw new Error(await res.text());
+  return res.json();
+}
+
+export async function getAgentModel(role) {
+  return getJson(`${API_BASE}/api/novel/settings/agent-models/${encodeURIComponent(role)}`);
+}
+
+export async function saveAgentModel(role, config) {
+  const res = await fetch(`${API_BASE}/api/novel/settings/agent-models/${encodeURIComponent(role)}`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(config),
+  });
+  if (!res.ok) throw new Error(await res.text());
+  return res.json();
+}
+
+export async function deleteAgentModel(role) {
+  const res = await fetch(`${API_BASE}/api/novel/settings/agent-models/${encodeURIComponent(role)}`, {
+    method: 'DELETE',
+  });
+  if (!res.ok) throw new Error(await res.text());
+  return res.json();
+}
+
+// ===================== Engine Pipeline 配置 API =====================
+export async function getEnginePipeline() {
+  return getJson(`${API_BASE}/api/novel/engine/pipeline`);
+}
+
+export async function saveEnginePipeline(pipeline) {
+  const res = await fetch(`${API_BASE}/api/novel/engine/pipeline`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(pipeline),
+  });
+  if (!res.ok) throw new Error(await res.text());
+  return res.json();
+}
+
+// ===================== Trace 调试 API =====================
+export async function getTraces(workId, opts = {}) {
+  const { agentType, from, to, limit = 50, offset = 0 } = opts;
+  const params = new URLSearchParams();
+  if (agentType) params.set('agentType', agentType);
+  if (from) params.set('from', from);
+  if (to) params.set('to', to);
+  params.set('limit', String(limit));
+  params.set('offset', String(offset));
+  return getJson(`${API_BASE}/api/traces/${encodeURIComponent(workId)}?${params}`);
+}
+
+export async function getTraceStats(workId) {
+  return getJson(`${API_BASE}/api/traces/${encodeURIComponent(workId)}/stats`);
+}
+
+export async function getTraceTimeline(workId, chapterNumber) {
+  const params = chapterNumber ? `?chapterNumber=${chapterNumber}` : '';
+  return getJson(`${API_BASE}/api/traces/${encodeURIComponent(workId)}/timeline${params}`);
+}
+
+export async function getAgentTraces(workId, agentType, limit = 100) {
+  return getJson(`${API_BASE}/api/traces/${encodeURIComponent(workId)}/agent/${encodeURIComponent(agentType)}?limit=${limit}`);
+}

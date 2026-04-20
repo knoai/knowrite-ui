@@ -12,12 +12,29 @@ export function SettingsPage() {
   const [status, setStatus] = useState('');
   const [activeTab, setActiveTab] = useState('skill');
 
+  const [pipeline, setPipeline] = useState({ stages: {}, plan: { enabled: false } });
+
   useEffect(() => {
     api.getSettings()
       .then((data) => setSettings(data))
-      .catch((e) => setStatus('加载失败: ' + e.message))
+      .catch((e) => setStatus('加载失败: ' + e.message));
+    api.getEnginePipeline()
+      .then((data) => {
+        if (data.pipeline) setPipeline(data.pipeline);
+      })
+      .catch(() => {})
       .finally(() => setLoading(false));
   }, []);
+
+  const handleSavePipeline = async () => {
+    setStatus('');
+    try {
+      await api.saveEnginePipeline(pipeline);
+      setStatus('流水线配置保存成功');
+    } catch (e) {
+      setStatus('流水线配置保存失败: ' + e.message);
+    }
+  };
 
   const handleSave = async () => {
     if (!settings) return;
@@ -146,6 +163,38 @@ export function SettingsPage() {
     setStatus('已应用最佳实践温度');
   };
 
+  // ---- agentModels helpers ----
+  const AGENT_ROLES = ['writer', 'editor', 'humanizer', 'proofreader', 'reader', 'summarizer', 'polish'];
+  const getAgentModels = () => getModelCfg().agentModels || {};
+  const updateAgentModel = (role, field, value) => {
+    setModelCfg((mc) => {
+      const am = { ...mc.agentModels };
+      am[role] = { ...(am[role] || {}), [field]: value };
+      return { ...mc, agentModels: am };
+    });
+  };
+  const syncAgentModelsFromRoles = () => {
+    setModelCfg((mc) => {
+      const am = {};
+      AGENT_ROLES.forEach((role) => {
+        const roleCfg = mc.roleDefaults?.[role];
+        if (roleCfg) {
+          am[role] = {
+            provider: roleCfg.provider || '',
+            model: roleCfg.model || '',
+            temperature: typeof roleCfg.temperature === 'number' ? roleCfg.temperature : 0.7,
+          };
+        }
+      });
+      return { ...mc, agentModels: am };
+    });
+    setStatus('已从角色默认值同步到 Agent 模型');
+  };
+  const clearAgentModels = () => {
+    setModelCfg((mc) => ({ ...mc, agentModels: {} }));
+    setStatus('已清空 Agent 模型配置');
+  };
+
   const updateWriterRotation = (field, value) => {
     setModelCfg((mc) => {
       const wr = { ...mc.writerRotation, [field]: value };
@@ -257,6 +306,7 @@ export function SettingsPage() {
     { key: 'chapter', label: '章节配置' },
     { key: 'writing', label: '写作风格' },
     { key: 'models', label: '模型配置' },
+    { key: 'pipeline', label: '流水线' },
   ];
 
   const presetOptions = [
@@ -922,6 +972,88 @@ export function SettingsPage() {
               </div>
             </div>
 
+            {/* ===== Agent 模型分配 ===== */}
+            <div className="p-4 bg-slate-900/40 border border-slate-700/40 rounded-lg space-y-3">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h3 className="text-sm font-medium text-slate-200">Agent 模型分配</h3>
+                  <div className="text-xs text-slate-500 mt-0.5">
+                    为每个写作 Agent 独立指定 Provider + Model + Temperature，覆盖「角色默认模型」的通用配置。留空则回退到角色默认模型。
+                  </div>
+                </div>
+                <div className="flex gap-2">
+                  <Button size="sm" variant="secondary" onClick={syncAgentModelsFromRoles}>从角色默认同步</Button>
+                  <Button size="sm" variant="secondary" onClick={clearAgentModels}>清空</Button>
+                </div>
+              </div>
+
+              <div className="overflow-x-auto">
+                <table className="min-w-full text-sm border border-slate-700/40 rounded-lg">
+                  <thead className="bg-slate-900/60 text-slate-300">
+                    <tr>
+                      <th className="text-left px-3 py-2 font-medium">Agent</th>
+                      <th className="text-left px-3 py-2 font-medium">Provider</th>
+                      <th className="text-left px-3 py-2 font-medium">模型</th>
+                      <th className="text-left px-3 py-2 font-medium">温度</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-slate-700/40">
+                    {AGENT_ROLES.map((role) => {
+                      const cfg = getAgentModels()[role] || { provider: '', model: '', temperature: 0.7 };
+                      const currentProvider = cfg.provider || getModelCfg().defaultProvider || '';
+                      const availableModels = currentProvider ? (getModelCfg().providers[currentProvider]?.models || []) : [];
+                      return (
+                        <tr key={role} className="bg-slate-900/20">
+                          <td className="px-3 py-2 text-slate-200 whitespace-nowrap text-xs">{ROLE_LABELS[role] || role}</td>
+                          <td className="px-3 py-2">
+                            <select
+                              value={cfg.provider || ''}
+                              onChange={(e) => updateAgentModel(role, 'provider', e.target.value)}
+                              className="bg-slate-900 border border-slate-700 text-slate-200 text-xs rounded px-2 py-1"
+                            >
+                              <option value="">跟随角色默认</option>
+                              {providerKeys.map((pk) => (
+                                <option key={pk} value={pk}>{getModelCfg().providers[pk].alias || pk}</option>
+                              ))}
+                            </select>
+                          </td>
+                          <td className="px-3 py-2">
+                            <select
+                              value={cfg.model || ''}
+                              onChange={(e) => updateAgentModel(role, 'model', e.target.value)}
+                              className="bg-slate-900 border border-slate-700 text-slate-200 text-xs rounded px-2 py-1 w-40"
+                            >
+                              <option value="">跟随 Provider 默认</option>
+                              {availableModels.map((m) => (
+                                <option key={m} value={m}>{m}</option>
+                              ))}
+                            </select>
+                          </td>
+                          <td className="px-3 py-2">
+                            <div className="flex items-center gap-2">
+                              <input
+                                type="range"
+                                min={0}
+                                max={2}
+                                step={0.05}
+                                value={typeof cfg.temperature === 'number' ? cfg.temperature : 0.7}
+                                onChange={(e) => updateAgentModel(role, 'temperature', parseFloat(e.target.value))}
+                                className="w-20 accent-sky-500"
+                              />
+                              <span className="text-xs text-slate-400 w-10">{(typeof cfg.temperature === 'number' ? cfg.temperature : 0.7).toFixed(2)}</span>
+                            </div>
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+              <div className="text-xs text-slate-500">
+                提示：Agent 模型分配优先级高于「角色默认模型」。例如可设置 Writer 使用轻量模型降低成本，Editor 使用强模型提高审阅质量。
+              </div>
+            </div>
+
             {/* ===== 作家轮换（高级选项） ===== */}
             <div className="p-4 bg-slate-900/40 border border-slate-700/40 rounded-lg space-y-3">
               <div className="flex items-center justify-between cursor-pointer" onClick={() => setShowAdvanced(!showAdvanced)}>
@@ -1044,6 +1176,73 @@ export function SettingsPage() {
                   </div>
                 );
               })()}
+            </div>
+          </div>
+        )}
+
+        {activeTab === 'pipeline' && (
+          <div className="space-y-5">
+            <div className="flex items-center justify-between">
+              <div>
+                <CardTitle className="mb-1">写作流水线配置</CardTitle>
+                <p className="text-xs text-slate-500">控制续写时各 Agent 阶段的启用/禁用状态，以及 Plan 预演模式。</p>
+              </div>
+              <Button size="sm" onClick={handleSavePipeline}>保存流水线配置</Button>
+            </div>
+
+            {/* Plan 模式开关 */}
+            <div className="p-4 bg-slate-900/40 border border-slate-700/40 rounded-lg space-y-3">
+              <div className="flex items-center gap-3">
+                <input
+                  type="checkbox"
+                  checked={!!pipeline.plan?.enabled}
+                  onChange={(e) => setPipeline((p) => ({ ...p, plan: { ...(p.plan || {}), enabled: e.target.checked } }))}
+                  className="w-4 h-4 accent-sky-500"
+                />
+                <div>
+                  <div className="text-sm font-medium text-slate-200">Plan 预演模式</div>
+                  <div className="text-xs text-slate-500">续写前先生成章节节拍规划，作者确认后再执行 Writer</div>
+                </div>
+              </div>
+            </div>
+
+            {/* Stage 开关 */}
+            <div className="p-4 bg-slate-900/40 border border-slate-700/40 rounded-lg space-y-3">
+              <div className="text-sm font-medium text-slate-200 mb-2">Agent 阶段开关</div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                {[
+                  { key: 'writer', label: '作者（Writer）', desc: '生成初稿' },
+                  { key: 'editor', label: '编辑（Editor）', desc: '改稿审阅' },
+                  { key: 'humanizer', label: '去AI化（Humanizer）', desc: '降低 AI 痕迹' },
+                  { key: 'proofreader', label: '校编（Proofreader）', desc: '校对语法和逻辑' },
+                  { key: 'reader', label: '读者反馈（Reader）', desc: '模拟读者评审' },
+                  { key: 'summarizer', label: '摘要（Summarizer）', desc: '生成章节摘要' },
+                  { key: 'polish', label: '润色（Polish）', desc: '最终润色' },
+                ].map((stage) => {
+                  const enabled = pipeline.stages?.[stage.key]?.enabled !== false;
+                  return (
+                    <div key={stage.key} className={`flex items-start gap-3 p-3 rounded-lg border ${enabled ? 'bg-slate-900/20 border-slate-700/30' : 'bg-slate-900/10 border-slate-700/20 opacity-60'}`}>
+                      <input
+                        type="checkbox"
+                        checked={enabled}
+                        onChange={(e) => {
+                          const newStages = { ...(pipeline.stages || {}) };
+                          newStages[stage.key] = { ...(newStages[stage.key] || {}), enabled: e.target.checked };
+                          setPipeline({ ...pipeline, stages: newStages });
+                        }}
+                        className="w-4 h-4 accent-sky-500 mt-0.5"
+                      />
+                      <div>
+                        <div className="text-xs font-medium text-slate-200">{stage.label}</div>
+                        <div className="text-[10px] text-slate-500">{stage.desc}</div>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+              <div className="text-xs text-slate-500 mt-2">
+                提示：禁用某些阶段可以加速写作流程、降低 Token 消耗。Writer、Summarizer 不建议禁用（会影响后续章节上下文构建）。
+              </div>
             </div>
           </div>
         )}

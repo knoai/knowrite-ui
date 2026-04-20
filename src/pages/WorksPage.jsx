@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { ArrowLeft, Play, Download, BookOpen, Users, GitBranch, Map, Sparkles, BarChart3, ClipboardCheck, FileText, Plus, ChevronDown, ChevronRight, AlignLeft, ListTree, BrainCircuit } from 'lucide-react';
+import { ArrowLeft, Play, Download, BookOpen, Users, GitBranch, Map, Sparkles, BarChart3, ClipboardCheck, FileText, Plus, ChevronDown, ChevronRight, AlignLeft, ListTree, BrainCircuit, Lightbulb, Activity, RefreshCw } from 'lucide-react';
 import { Card, CardTitle, CardHeader } from '../components/ui/Card';
 import { Button } from '../components/ui/Button';
 import { Badge } from '../components/ui/Badge';
@@ -65,20 +65,70 @@ export function WorksPage() {
   const [openSections, setOpenSections] = useState({ theme: true, outline: false, tree: true });
   const [expandedChapters, setExpandedChapters] = useState(new Set());
   const [expandedOutlineChapters, setExpandedOutlineChapters] = useState(new Set());
+  const [pipeline, setPipeline] = useState(null);
+  const [planModal, setPlanModal] = useState({ open: false, plan: null, planning: false });
 
   useEffect(() => { refreshWorks(); }, [refreshWorks]);
   useEffect(() => { if (workId && workId !== currentWorkId) selectWork(workId); }, [workId, currentWorkId, selectWork]);
   useEffect(() => { if (currentWorkData?.currentVolume) setTargetVolume(currentWorkData.currentVolume); }, [currentWorkData]);
+  useEffect(() => {
+    if (workId) {
+      api.getEnginePipeline().then((data) => setPipeline(data.pipeline || null)).catch(() => {});
+    }
+  }, [workId]);
 
   const handleSelect = (id) => navigate(`/works/${id}`);
   const handleBack = () => navigate('/works');
 
   const handleContinue = async () => {
     if (!currentWorkId) return;
+    // Plan 模式：先检查是否需要预演
+    if (pipeline?.plan?.enabled && !planModal.plan) {
+      setPlanModal({ open: true, plan: null, planning: true });
+      const controller = new AbortController();
+      try {
+        const res = await fetch('/api/novel/plan', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ workId: currentWorkId }),
+          signal: controller.signal,
+        });
+        if (!res.ok) throw new Error(await res.text());
+        const reader = res.body.getReader();
+        const decoder = new TextDecoder();
+        let buffer = '';
+        let planResult = null;
+        while (true) {
+          const { done, value } = await reader.read();
+          if (done) break;
+          buffer += decoder.decode(value, { stream: true });
+          const lines = buffer.split('\n');
+          buffer = lines.pop() || '';
+          for (const line of lines) {
+            if (!line.trim().startsWith('data:')) continue;
+            const dataStr = line.trim().slice(5).trim();
+            if (!dataStr || dataStr === '[DONE]') continue;
+            try {
+              const ev = JSON.parse(dataStr);
+              if (ev.type === 'plan') {
+                planResult = { beats: ev.beats || [], overallTone: ev.overallTone || '', riskFlags: ev.riskFlags || [] };
+              }
+            } catch {}
+          }
+        }
+        setPlanModal({ open: true, plan: planResult, planning: false });
+      } catch (e) {
+        setPlanModal({ open: false, plan: null, planning: false });
+        setStatus('Plan 预演失败: ' + e.message);
+      }
+      return;
+    }
+
     setStreamText('');
     setStatus('正在续写下一章...');
     setContinuing(true);
     setSteps([]);
+    setPlanModal({ open: false, plan: null, planning: false });
     const controller = new AbortController();
     try {
       const tv = currentWorkData?.volumes?.length ? targetVolume : undefined;
@@ -229,6 +279,14 @@ export function WorksPage() {
             <Button variant="primary" size="sm" onClick={handleContinue} disabled={continuing}>
               <Play size={14} />
               {continuing ? '续写中...' : '续写下一章'}
+            </Button>
+            <Button variant="secondary" size="sm" onClick={() => navigate(`/plan?workId=${workId}`)}>
+              <Lightbulb size={14} />
+              本章预演
+            </Button>
+            <Button variant="ghost" size="sm" onClick={() => navigate(`/traces?workId=${workId}`)}>
+              <Activity size={14} />
+              Trace
             </Button>
             <Button variant="ghost" size="sm" onClick={() => navigate(`/memory/${workId}`)}>
               <BrainCircuit size={14} />
@@ -479,6 +537,109 @@ export function WorksPage() {
           </div>
         </div>
       </Card>
+
+      {/* Plan 预演 Modal */}
+      {planModal.open && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
+          <div className="bg-slate-900 border border-slate-700/50 rounded-2xl w-full max-w-2xl max-h-[85vh] overflow-auto shadow-2xl">
+            <div className="p-5 border-b border-slate-700/40 flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <Lightbulb size={18} className="text-amber-400" />
+                <h3 className="text-base font-bold text-slate-100">章节节拍规划</h3>
+              </div>
+              <button onClick={() => setPlanModal({ ...planModal, open: false, planning: false })} className="text-slate-500 hover:text-slate-300">
+                ✕
+              </button>
+            </div>
+
+            <div className="p-5 space-y-4">
+              {planModal.planning && (
+                <div className="flex items-center gap-2 text-slate-400 text-sm py-8 justify-center">
+                  <span className="inline-block w-4 h-4 border-2 border-slate-600 border-t-amber-400 rounded-full animate-spin" />
+                  正在生成本章节拍规划...
+                </div>
+              )}
+
+              {!planModal.planning && planModal.plan && (
+                <>
+                  <div className="flex gap-3">
+                    {planModal.plan.overallTone && (
+                      <div className="flex-1 p-3 bg-amber-500/5 border border-amber-500/15 rounded-lg">
+                        <div className="text-[10px] text-amber-400/70 mb-0.5">整体基调</div>
+                        <div className="text-sm text-slate-200">{planModal.plan.overallTone}</div>
+                      </div>
+                    )}
+                    <div className="flex-1 p-3 bg-sky-500/5 border border-sky-500/15 rounded-lg">
+                      <div className="text-[10px] text-sky-400/70 mb-0.5">预计总字数</div>
+                      <div className="text-sm text-slate-200">
+                        {(planModal.plan.beats?.reduce((s, b) => s + (b.estimatedWords || 0), 0) || 0).toLocaleString()} 字
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="space-y-2">
+                    {planModal.plan.beats?.map((beat, idx) => (
+                      <div key={idx} className="p-3 bg-slate-800/40 border border-slate-700/30 rounded-lg">
+                        <div className="flex items-center gap-2 mb-1">
+                          <span className={`text-[10px] px-1.5 py-0.5 rounded border ${
+                            beat.type === 'hook' ? 'bg-amber-500/10 text-amber-400 border-amber-500/20' :
+                            beat.type === 'rising' ? 'bg-sky-500/10 text-sky-400 border-sky-500/20' :
+                            beat.type === 'climax' ? 'bg-rose-500/10 text-rose-400 border-rose-500/20' :
+                            beat.type === 'falling' ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20' :
+                            'bg-violet-500/10 text-violet-400 border-violet-500/20'
+                          }`}>
+                            {beat.type === 'hook' ? '钩子' : beat.type === 'rising' ? '升级' : beat.type === 'climax' ? '高潮' : beat.type === 'falling' ? '回落' : '悬念'}
+                          </span>
+                          <span className="text-[10px] text-slate-500">{beat.estimatedWords || '?'} 字</span>
+                        </div>
+                        <div className="text-sm text-slate-300 leading-relaxed">{beat.description}</div>
+                        {beat.mustInclude?.length > 0 && (
+                          <div className="flex gap-1 flex-wrap mt-1.5">
+                            {beat.mustInclude.map((item, i) => (
+                              <span key={i} className="text-[10px] px-1.5 py-0.5 bg-slate-800 rounded text-slate-400">{item}</span>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+
+                  {planModal.plan.riskFlags?.length > 0 && (
+                    <div className="p-3 bg-amber-500/5 border border-amber-500/15 rounded-lg">
+                      <div className="text-[10px] text-amber-400/70 mb-1">风险提示</div>
+                      <ul className="space-y-0.5">
+                        {planModal.plan.riskFlags.map((flag, i) => (
+                          <li key={i} className="text-xs text-slate-400">• {flag}</li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
+                </>
+              )}
+
+              {!planModal.planning && !planModal.plan && (
+                <div className="text-sm text-slate-500 text-center py-8">未获取到节拍规划（Plan 模式可能已关闭）</div>
+              )}
+            </div>
+
+            <div className="p-5 border-t border-slate-700/40 flex justify-end gap-3">
+              <Button variant="secondary" size="sm" onClick={() => setPlanModal({ ...planModal, open: false, planning: false })}>
+                取消
+              </Button>
+              {planModal.plan && (
+                <Button variant="ghost" size="sm" onClick={() => { setPlanModal({ ...planModal, plan: null }); handleContinue(); }} disabled={planModal.planning}>
+                  <RefreshCw size={14} className="mr-1.5" />
+                  重新规划
+                </Button>
+              )}
+              <Button size="sm" onClick={handleContinue} disabled={planModal.planning || !planModal.plan}>
+                <Play size={14} className="mr-1.5" />
+                确认并续写
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

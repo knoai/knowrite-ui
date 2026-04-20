@@ -14,6 +14,8 @@ import { TemplatesPage } from './pages/TemplatesPage';
 import { DeconstructPage } from './pages/DeconstructPage';
 import { MemoryPage } from './pages/MemoryPage';
 import { GuidePage } from './pages/GuidePage';
+import { TraceDashboardPage } from './pages/TraceDashboardPage';
+import { PlanPage } from './pages/PlanPage';
 
 function App() {
   return (
@@ -33,6 +35,8 @@ function App() {
             <Route path="templates" element={<TemplatesPage />} />
             <Route path="deconstruct" element={<DeconstructPage />} />
             <Route path="memory/:workId" element={<MemoryPage />} />
+            <Route path="traces" element={<TraceDashboardPage />} />
+            <Route path="plan" element={<PlanPage />} />
             <Route path="guide" element={<GuidePage />} />
           </Route>
         </Routes>
