@@ -435,6 +435,15 @@ async function postStream(url, body, onChunk, signal, onEvent) {
           if (onEvent) onEvent({ type: 'done', meta: ev.meta });
           onChunk(`\n\n✅ ${$t('status_all_complete')}\n`);
         }
+        if (ev.type === 'paused') {
+          if (onEvent) onEvent({ type: 'paused', step: ev.step, message: ev.message });
+          onChunk(`
+
+⏸️ ${$t('status_paused')}: ${ev.step}
+`);
+          break;
+        }
+
         if (ev.type === 'error') {
           const raw = ev.message || $t('api_error_stream');
           const isConfig = raw.includes(zh.label_model_config) || raw.includes(zh.status_not_configured) || raw.includes('Provider') || raw.includes('baseURL') || raw.includes('apiKey');
@@ -579,4 +588,23 @@ export async function getTraceTimeline(workId, chapterNumber) {
 
 export async function getAgentTraces(workId, agentType, limit = 100) {
   return getJson(`${API_BASE}/api/traces/${encodeURIComponent(workId)}/agent/${encodeURIComponent(agentType)}?limit=${limit}`);
+}
+
+// ===================== Pause / Resume API =====================
+export async function pauseWork(workId) {
+  const res = await fetch(`${API_BASE}/api/novel/works/${encodeURIComponent(workId)}/pause`, { method: 'POST' });
+  if (!res.ok) throw new Error(await res.text());
+  return res.json();
+}
+
+export async function resumeWork(workId) {
+  const res = await fetch(`${API_BASE}/api/novel/works/${encodeURIComponent(workId)}/resume`, { method: 'POST' });
+  if (!res.ok) throw new Error(await res.text());
+  return res.json();
+}
+
+export async function getWorkStatus(workId) {
+  const res = await fetch(`${API_BASE}/api/novel/works/${encodeURIComponent(workId)}/status`);
+  if (!res.ok) throw new Error(await res.text());
+  return res.json();
 }

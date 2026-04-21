@@ -165,6 +165,28 @@ export function WorksPage() {
     }
   };
 
+  const handlePause = async () => {
+    if (!currentWorkId) return;
+    try {
+      await api.pauseWork(currentWorkId);
+      setStatus(t('status_paused'));
+      await refreshCurrentWork();
+    } catch (e) {
+      setStatus(t('err_generic') + e.message);
+    }
+  };
+
+  const handleResume = async () => {
+    if (!currentWorkId) return;
+    try {
+      await api.resumeWork(currentWorkId);
+      setStatus(t('btn_resume'));
+      await refreshCurrentWork();
+    } catch (e) {
+      setStatus(t('err_generic') + e.message);
+    }
+  };
+
   const handleExport = async () => {
     if (!currentWorkId) return;
     const blob = new Blob([currentWorkData?.fullText || ''], { type: 'text/plain;charset=utf-8' });
@@ -278,6 +300,7 @@ export function WorksPage() {
               <Badge variant="info">{info?.chapters?.length || 0}{t('unit_chapters')}</Badge>
               <Badge variant="success">{Math.round(totalChars / 1000)}K{t('unit_chars')}</Badge>
               {info?.writingMode === 'free' && <Badge variant="purple">{t('t_jlt0n')}</Badge>}
+              {info?.status === 'paused' && <Badge variant="warning">{t('status_paused')}</Badge>}
               {hasVolumes && (
                 <Select value={targetVolume} onChange={(e) => setTargetVolume(parseInt(e.target.value, 10))} className="w-auto text-xs py-1 px-2 h-7">
                   {info.volumes.map((v) => (
@@ -288,10 +311,22 @@ export function WorksPage() {
             </div>
           </div>
           <div className="flex gap-2">
-            <Button variant="primary" size="sm" onClick={handleContinue} disabled={continuing}>
-              <Play size={14} />
-              {continuing ? t('status_continuing_ch') : t('btn_continue_next')}
-            </Button>
+            {info?.status === 'paused' ? (
+              <Button variant="primary" size="sm" onClick={handleResume}>
+                {t('btn_resume')}
+              </Button>
+            ) : (
+              <Button variant="primary" size="sm" onClick={handleContinue} disabled={continuing}>
+                <Play size={14} />
+                {continuing ? t('status_continuing_ch') : t('btn_continue_next')}
+              </Button>
+            )}
+            {!continuing && info?.status !== 'paused' && (
+              <Button variant="secondary" size="sm" onClick={handlePause}>
+                {t('btn_pause')}
+              </Button>
+            )}
+
             <Button variant="secondary" size="sm" onClick={() => navigate(`/plan?workId=${workId}`)}>
               <Lightbulb size={14} />
               {t('btn_chapter_preview')}
