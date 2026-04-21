@@ -19,7 +19,7 @@ export function SettingsPage() {
   useEffect(() => {
     api.getSettings()
       .then((data) => setSettings(data))
-      .catch((e) => setStatus('加载失败: ' + e.message));
+      .catch((e) => setStatus(t('status_load_failed') + e.message));
     api.getEnginePipeline()
       .then((data) => {
         if (data.pipeline) setPipeline(data.pipeline);
@@ -391,7 +391,7 @@ export function SettingsPage() {
           <CardTitle className="mb-0">{t('t_ap42q9')}</CardTitle>
           <Button variant="primary" size="sm" onClick={handleSave} disabled={saving}>{t('t_agor7v')}</Button>
         </CardHeader>
-        {status && <div className={`text-sm mb-3 ${status.includes('失败') ? 'text-red-400' : 'text-green-400'}`}>{status}</div>}
+        {status && <div className={`text-sm mb-3 ${status.includes(t('status_failed')) ? 'text-red-400' : 'text-green-400'}`}>{status}</div>}
 
         <div className="flex gap-1 border-b border-slate-700/60 pb-0 mb-4 overflow-x-auto">
           {tabs.map((t) => (
@@ -567,7 +567,7 @@ export function SettingsPage() {
                 </div>
               </div>
               <div className="text-xs text-slate-500">
-                模型库是全局 Provider 模板，{t('btn_add_provider')} 时可从中选择自动填充。修改后请点「{t('btn_save_model_lib')}」。
+                {t('hint_model_library')}
               </div>
 
               {editingLibIndex !== null && (
@@ -781,7 +781,7 @@ export function SettingsPage() {
                               }
                             }}
                           >
-                            添加
+                            {t('btn_add_short')}
                           </Button>
                         </div>
                       </div>
@@ -966,7 +966,7 @@ export function SettingsPage() {
                 </table>
               </div>
               <div className="text-xs text-slate-500">
-                最佳实践：创作类角色（作者、{t('btn_edit')}、润色）建议温度 0.8~0.9；审核/评审/结构类角色建议温度 0~0.3，以降低幻觉并提高稳定性。Provider 留空则跟随「默认 Provider」，模型留空则跟随该 Provider 的默认模型（未设置则使用第一个可用模型）。
+                {t('hint_temperature_best_practice')}
               </div>
             </div>
 
@@ -1203,13 +1203,13 @@ export function SettingsPage() {
               <div className="text-sm font-medium text-slate-200 mb-2">{t('label_agent_stages')}</div>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 {[
-                  { key: 'writer', label: '作者（Writer）', desc: '生成初稿' },
-                  { key: 'editor', label: '编辑（Editor）', desc: '改稿审阅' },
-                  { key: 'humanizer', label: '去AI化（Humanizer）', desc: '降低 AI 痕迹' },
-                  { key: 'proofreader', label: '校编（Proofreader）', desc: '校对语法和逻辑' },
-                  { key: 'reader', label: '读者反馈（Reader）', desc: '模拟读者评审' },
-                  { key: 'summarizer', label: '摘要（Summarizer）', desc: '生成章节摘要' },
-                  { key: 'polish', label: '润色（Polish）', desc: '最终润色' },
+                  { key: 'writer', label: t('stage_writer_label'), desc: t('stage_writer_desc') },
+                  { key: 'editor', label: t('stage_editor_label'), desc: t('stage_editor_desc') },
+                  { key: 'humanizer', label: t('stage_humanizer_label'), desc: t('stage_humanizer_desc') },
+                  { key: 'proofreader', label: t('stage_proofreader_label'), desc: t('stage_proofreader_desc') },
+                  { key: 'reader', label: t('stage_reader_label'), desc: t('stage_reader_desc') },
+                  { key: 'summarizer', label: t('stage_summarizer_label'), desc: t('stage_summarizer_desc') },
+                  { key: 'polish', label: t('stage_polish_label'), desc: t('stage_polish_desc') },
                 ].map((stage) => {
                   const enabled = pipeline.stages?.[stage.key]?.enabled !== false;
                   return (

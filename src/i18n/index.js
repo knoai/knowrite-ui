@@ -10,10 +10,8 @@ export function getStoredLang() {
     const stored = localStorage.getItem(STORAGE_KEY);
     if (stored && translations[stored]) return stored;
   }
-  const browserLang = typeof navigator !== 'undefined'
-    ? (navigator.language || navigator.userLanguage || 'en').slice(0, 2)
-    : 'en';
-  return translations[browserLang] ? browserLang : 'en';
+  // Default to English; users can switch manually via LanguageSwitcher
+  return 'en';
 }
 
 export function storeLang(lang) {
