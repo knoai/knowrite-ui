@@ -22,7 +22,7 @@ export const en = {
   'nav_guide': 'Guide',
   // Original keys
   't_diprg1': 'Unknown error',
-  'nn_n': '\n\n✅ 全部完成\n',
+  'nn_n': '\n\n✅ All Done\n',
   't_ckolpx': 'Streaming response error',
   't_drf3kb': 'Model configuration',
   't_fte97': 'Not configured',
