@@ -3,9 +3,11 @@ import { Card, CardHeader, CardTitle } from '../components/ui/Card';
 import { Button } from '../components/ui/Button';
 import { Input } from '../components/ui/Input';
 import { Textarea } from '../components/ui/Input';
+import { useI18n } from '../contexts/I18nContext';
 import * as api from '../api/novel';
 
 export function ChatPage() {
+  const { t } = useI18n();
   const [providers, setProviders] = useState({});
   const [prompts, setPrompts] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -81,10 +83,10 @@ export function ChatPage() {
         },
         ctrl.signal
       );
-      setMessages((prev) => [...prev, { role: 'assistant', content: streamRef.current || '（无返回）' }]);
+      setMessages((prev) => [...prev, { role: 'assistant', content: streamRef.current || t('no_response') }]);
     } catch (e) {
       if (e.name !== 'AbortError') {
-        setMessages((prev) => [...prev, { role: 'assistant', content: `❌ 错误: ${e.message}` }]);
+        setMessages((prev) => [...prev, { role: 'assistant', content: `❌ ${t('label_error')}: ${e.message}` }]);
       }
     } finally {
       setStreaming(false);
@@ -113,7 +115,7 @@ export function ChatPage() {
     return (
       <div className="flex items-center gap-2 text-slate-400 text-sm py-8">
         <span className="inline-block w-4 h-4 border-2 border-slate-600 border-t-sky-400 rounded-full animate-spin" />
-        加载配置中...
+        {t('loading_config')}
       </div>
     );
   }
@@ -122,7 +124,7 @@ export function ChatPage() {
     <div className="flex flex-col h-[calc(100vh-6rem)] min-h-[400px]">
       <Card className="flex flex-col h-full !p-0">
         <CardHeader className="!mx-0 !mt-0">
-          <CardTitle className="text-base">Agent 聊天</CardTitle>
+          <CardTitle className="text-base">{t('agent_chat_title')}</CardTitle>
         </CardHeader>
 
         {/* 工具栏 */}
@@ -147,17 +149,17 @@ export function ChatPage() {
             </div>
 
             <div className="flex items-center gap-2">
-              <label className="text-xs text-slate-400">模型</label>
+              <label className="text-xs text-slate-400">{t('label_model')}</label>
               <Input
                 value={model}
                 onChange={(e) => setModel(e.target.value)}
-                placeholder="模型名称"
+                placeholder={t('placeholder_model')}
                 className="w-32 text-sm py-1"
               />
             </div>
 
             <div className="flex items-center gap-2">
-              <label className="text-xs text-slate-400">温度</label>
+              <label className="text-xs text-slate-400">{t('label_temperature')}</label>
               <input
                 type="range"
                 min={0}
@@ -180,7 +182,7 @@ export function ChatPage() {
                 }}
                 className="bg-slate-900 border border-slate-700 text-slate-200 text-sm rounded px-2 py-1"
               >
-                <option value="">无模板</option>
+                <option value="">{t('option_no_template')}</option>
                 {prompts.map((p) => (
                   <option key={p} value={p}>{p}</option>
                 ))}
@@ -188,7 +190,7 @@ export function ChatPage() {
             </div>
 
             <Button variant="ghost" size="sm" onClick={() => setShowSystem((s) => !s)}>
-              {showSystem ? '隐藏系统提示' : '编辑系统提示'}
+              {showSystem ? t('btn_hide_system_prompt') : t('btn_edit_system_prompt')}
             </Button>
           </div>
 
@@ -197,7 +199,7 @@ export function ChatPage() {
               <Textarea
                 value={systemPrompt}
                 onChange={(e) => setSystemPrompt(e.target.value)}
-                placeholder="系统提示词（可选）。选择 Prompt 模板后会自动加载模板内容，也可以在此手动覆盖。"
+                placeholder={t('placeholder_system_prompt')}
                 rows={3}
                 className="text-sm"
               />
@@ -209,7 +211,7 @@ export function ChatPage() {
         <div className="flex-1 overflow-y-auto px-4 py-3 space-y-3">
           {messages.length === 0 && (
             <div className="text-center text-slate-500 text-sm py-10">
-              选择模型和 Prompt 模板，开始与 Agent 对话。
+              {t('chat_welcome_hint')}
             </div>
           )}
 
@@ -246,21 +248,21 @@ export function ChatPage() {
               value={input}
               onChange={(e) => setInput(e.target.value)}
               onKeyDown={handleKeyDown}
-              placeholder="输入消息，按 Enter 发送，Shift+Enter 换行"
+              placeholder={t('placeholder_chat_input')}
               rows={2}
               disabled={streaming}
               className="flex-1 text-sm"
             />
             <div className="flex flex-col gap-2">
               {streaming ? (
-                <Button variant="danger" size="sm" onClick={handleStop}>停止</Button>
+                <Button variant="danger" size="sm" onClick={handleStop}>{t('btn_stop')}</Button>
               ) : (
                 <Button variant="primary" size="sm" onClick={doSend} disabled={!input.trim()}>
-                  发送
+                  {t('btn_send')}
                 </Button>
               )}
               <Button variant="ghost" size="sm" onClick={() => setMessages([])} disabled={streaming || messages.length === 0}>
-                清空
+                {t('btn_clear')}
               </Button>
             </div>
           </div>

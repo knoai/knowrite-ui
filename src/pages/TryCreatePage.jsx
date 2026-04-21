@@ -5,23 +5,26 @@ import { Card, CardTitle } from '../components/ui/Card';
 import { Button } from '../components/ui/Button';
 import { Input, Textarea } from '../components/ui/Input';
 import { useToast } from '../components/ui/Toast';
+import { useI18n } from '../contexts/I18nContext';
 import * as api from '../api/novel';
-
-const STAGE_DEFS = [
-  { key: 'outline', label: '生成简介大纲', desc: '输出作品简介和主题大纲，看看整体方向是否符合预期', icon: FileText },
-  { key: 'detailed', label: '生成详细纲章', desc: '基于大纲输出每章的详细规划，确认节奏和结构', icon: BookOpen },
-  { key: 'chapters', label: '生成前3章', desc: '创作正文前3章，体验实际写作风格和人物表现', icon: Sparkles },
-  { key: 'continue', label: '续写第一卷', desc: '继续创作后续章节，推进剧情发展', icon: ArrowRight },
-];
-
-const STRATEGIES = [
-  { key: 'pipeline', label: '快速模式', desc: '1-2分钟，适合试水和短篇' },
-  { key: 'knowrite', label: '精品模式', desc: '5-15分钟，质量更高，多轮精修' },
-];
 
 export function TryCreatePage() {
   const navigate = useNavigate();
   const { addToast } = useToast();
+  const { t } = useI18n();
+
+  const STAGE_DEFS = [
+    { key: 'outline', label: t('stage_outline_label'), desc: t('stage_outline_desc'), icon: FileText },
+    { key: 'detailed', label: t('stage_detailed_label'), desc: t('stage_detailed_desc'), icon: BookOpen },
+    { key: 'chapters', label: t('stage_chapters_label'), desc: t('stage_chapters_desc'), icon: Sparkles },
+    { key: 'continue', label: t('stage_continue_label'), desc: t('stage_continue_desc'), icon: ArrowRight },
+  ];
+
+  const STRATEGIES = [
+    { key: 'pipeline', label: t('strategy_fast_label'), desc: t('strategy_fast_desc') },
+    { key: 'knowrite', label: t('strategy_quality_label'), desc: t('strategy_quality_desc') },
+  ];
+
   const [topic, setTopic] = useState('');
   const [platformStyle, setPlatformStyle] = useState('番茄');
   const [authorStyle, setAuthorStyle] = useState('热血磅礴');
@@ -77,7 +80,7 @@ export function TryCreatePage() {
         updateStage(key, { loading: false, done: true });
       }
       if (ev.type === 'error') {
-        updateStage(key, { loading: false, error: ev.message || '生成失败', errorContext: ev.context, rawMessage: ev.rawMessage });
+        updateStage(key, { loading: false, error: ev.message || t('generation_failed'), errorContext: ev.context, rawMessage: ev.rawMessage });
       }
     };
 
@@ -138,18 +141,18 @@ export function TryCreatePage() {
     <div className="space-y-5">
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-lg font-semibold text-slate-100">尝试创作</h2>
-          <p className="text-xs text-slate-500">渐进式体验创作流程，每一步都可以预览效果后再决定下一步</p>
+          <h2 className="text-lg font-semibold text-slate-100">{t('try_create_title')}</h2>
+          <p className="text-xs text-slate-500">{t('try_create_subtitle')}</p>
         </div>
         <div className="flex gap-2">
           {workId && (
             <Button size="sm" variant="secondary" onClick={goToWork}>
-              查看作品
+              {t('btn_view_work')}
             </Button>
           )}
           <Button size="sm" variant="danger" onClick={resetAll}>
             <RotateCcw size={14} className="mr-1" />
-            重置
+            {t('btn_reset')}
           </Button>
         </div>
       </div>
@@ -158,17 +161,17 @@ export function TryCreatePage() {
       <Card>
         <div className="space-y-4">
           <div>
-            <label className="block text-sm text-slate-300 mb-1">小说主题 / 一句话灵感</label>
+            <label className="block text-sm text-slate-300 mb-1">{t('label_topic')}</label>
             <Textarea
               value={topic}
               onChange={(e) => setTopic(e.target.value)}
-              placeholder="例如：一个被退婚的少年意外获得上古传承，从此踏上逆袭之路..."
+              placeholder={t('placeholder_topic')}
               rows={3}
             />
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div>
-              <label className="block text-sm text-slate-300 mb-1">平台风格</label>
+              <label className="block text-sm text-slate-300 mb-1">{t('label_platform_style')}</label>
               <select
                 value={platformStyle}
                 onChange={(e) => setPlatformStyle(e.target.value)}
@@ -180,7 +183,7 @@ export function TryCreatePage() {
               </select>
             </div>
             <div>
-              <label className="block text-sm text-slate-300 mb-1">作者风格</label>
+              <label className="block text-sm text-slate-300 mb-1">{t('label_author_style')}</label>
               <select
                 value={authorStyle}
                 onChange={(e) => setAuthorStyle(e.target.value)}
@@ -194,7 +197,7 @@ export function TryCreatePage() {
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div>
-              <label className="block text-sm text-slate-300 mb-1">创作模式</label>
+              <label className="block text-sm text-slate-300 mb-1">{t('label_creation_mode')}</label>
               <div className="flex gap-2">
                 {STRATEGIES.map((s) => (
                   <button
@@ -213,11 +216,11 @@ export function TryCreatePage() {
               </div>
             </div>
             <div>
-              <label className="block text-sm text-slate-300 mb-1">写作风格</label>
+              <label className="block text-sm text-slate-300 mb-1">{t('label_writing_style')}</label>
               <div className="flex gap-2">
                 {[
-                  { key: 'industrial', label: '工业风' },
-                  { key: 'free', label: '自由风' },
+                  { key: 'industrial', label: t('writing_style_industrial') },
+                  { key: 'free', label: t('writing_style_free') },
                 ].map((m) => (
                   <button
                     key={m.key}
@@ -235,13 +238,13 @@ export function TryCreatePage() {
             </div>
             {storyTemplates.length > 0 && (
               <div>
-                <label className="block text-sm text-slate-300 mb-1">套路模版（可选）</label>
+                <label className="block text-sm text-slate-300 mb-1">{t('label_story_template')}</label>
                 <select
                   value={selectedTemplate}
                   onChange={(e) => setSelectedTemplate(e.target.value)}
                   className="w-full bg-slate-900 border border-slate-700 text-slate-200 text-sm rounded-lg px-3 py-2"
                 >
-                  <option value="">无套路 — 自由创作</option>
+                  <option value="">{t('option_no_template')}</option>
                   {storyTemplates.map((t) => (
                     <option key={t.id} value={t.id}>{t.name} ({t.category})</option>
                   ))}
@@ -269,9 +272,9 @@ export function TryCreatePage() {
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2">
                     <span className="text-sm font-medium text-slate-200">{def.label}</span>
-                    {state.done && <span className="text-[10px] bg-green-500/15 text-green-400 px-1.5 py-0.5 rounded">已完成</span>}
-                    {state.loading && <span className="text-[10px] bg-sky-500/15 text-sky-400 px-1.5 py-0.5 rounded">生成中...</span>}
-                    {state.error && <span className="text-[10px] bg-red-500/15 text-red-400 px-1.5 py-0.5 rounded">失败</span>}
+                    {state.done && <span className="text-[10px] bg-green-500/15 text-green-400 px-1.5 py-0.5 rounded">{t('status_done')}</span>}
+                    {state.loading && <span className="text-[10px] bg-sky-500/15 text-sky-400 px-1.5 py-0.5 rounded">{t('status_generating')}</span>}
+                    {state.error && <span className="text-[10px] bg-red-500/15 text-red-400 px-1.5 py-0.5 rounded">{t('status_failed')}</span>}
                   </div>
                   <div className="text-xs text-slate-500">{def.desc}</div>
                 </div>
@@ -282,11 +285,11 @@ export function TryCreatePage() {
                     onClick={() => runStage(idx)}
                   >
                     {state.loading ? (
-                      <><Loader2 size={14} className="animate-spin mr-1" />生成中</>
+                      <><Loader2 size={14} className="animate-spin mr-1" />{t('btn_generate')}</>
                     ) : state.done ? (
-                      <><RotateCcw size={14} className="mr-1" />重新生成</>
+                      <><RotateCcw size={14} className="mr-1" />{t('btn_regenerate')}</>
                     ) : (
-                      <><Play size={14} className="mr-1" />生成</>
+                      <><Play size={14} className="mr-1" />{t('btn_generate')}</>
                     )}
                   </Button>
                   <button
@@ -302,14 +305,14 @@ export function TryCreatePage() {
                 <div className="mt-3 pt-3 border-t border-slate-700/40">
                   {state.error && (
                     <div className="mb-3 p-3 rounded-lg bg-red-500/10 border border-red-500/20">
-                      <div className="text-xs text-red-300 font-medium mb-1">生成失败</div>
+                      <div className="text-xs text-red-300 font-medium mb-1">{t('generation_failed')}</div>
                       <div className="text-xs text-red-400 leading-relaxed">{state.error}</div>
                       {state.error?.includes('模型配置') && (
                         <button
                           onClick={() => navigate('/settings')}
                           className="mt-2 text-xs text-sky-400 hover:text-sky-300 underline"
                         >
-                          前往「设置 → 模型配置」检查 →
+                          {t('goto_model_settings')}
                         </button>
                       )}
                     </div>
@@ -319,12 +322,12 @@ export function TryCreatePage() {
                       <pre className="text-xs text-slate-300 whitespace-pre-wrap font-mono leading-relaxed">{state.text}</pre>
                     </div>
                   ) : (
-                    <div className="text-xs text-slate-600 italic">点击「生成」后，内容将在这里实时流式输出...</div>
+                    <div className="text-xs text-slate-600 italic">{t('click_generate_hint')}</div>
                   )}
                   {state.done && def.key === 'chapters' && (
                     <div className="mt-3 flex gap-2">
                       <Button size="sm" variant="primary" onClick={() => setExpandedStage('continue')}>
-                        下一步：续写第一卷 <ArrowRight size={14} className="ml-1" />
+                        {t('btn_next_continue')} <ArrowRight size={14} className="ml-1" />
                       </Button>
                     </div>
                   )}
@@ -339,10 +342,10 @@ export function TryCreatePage() {
         <div className="p-3 bg-slate-900/40 border border-slate-700/40 rounded-lg">
           <div className="flex items-center justify-between">
             <div className="text-xs text-slate-400">
-              作品 ID: <span className="font-mono text-sky-400">{workId}</span>
+              {t('label_work_id')}: <span className="font-mono text-sky-400">{workId}</span>
             </div>
             <Button size="sm" variant="secondary" onClick={goToWork}>
-              进入作品管理页 →
+              {t('btn_go_to_work')}
             </Button>
           </div>
         </div>

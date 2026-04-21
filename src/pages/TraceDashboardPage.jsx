@@ -4,22 +4,8 @@ import { Activity, Clock, Cpu, FileText, TrendingUp, Search, RefreshCw } from 'l
 import { Card, CardTitle } from '../components/ui/Card';
 import { Button } from '../components/ui/Button';
 import { Input } from '../components/ui/Input';
+import { useI18n } from '../contexts/I18nContext';
 import * as api from '../api/novel';
-
-const AGENT_LABELS = {
-  writer: '作者',
-  editor: '编辑',
-  humanizer: '去AI化',
-  proofreader: '校编',
-  polish: '润色',
-  reader: '读者反馈',
-  summarizer: '摘要',
-  planner: '策划',
-  context: '上下文',
-  deviation: '偏离检测',
-  outline: '大纲',
-  unknown: '未知',
-};
 
 function formatDuration(ms) {
   if (ms < 1000) return `${ms}ms`;
@@ -32,6 +18,7 @@ function formatDate(iso) {
 }
 
 export function TraceDashboardPage() {
+  const { t } = useI18n();
   const [searchParams, setSearchParams] = useSearchParams();
   const [workId, setWorkId] = useState(searchParams.get('workId') || '');
   const [works, setWorks] = useState([]);
@@ -42,6 +29,21 @@ export function TraceDashboardPage() {
   const [error, setError] = useState('');
   const [activeTab, setActiveTab] = useState('stats');
   const [selectedAgent, setSelectedAgent] = useState('');
+
+  const AGENT_LABELS = {
+    writer: t('agent_writer'),
+    editor: t('agent_editor'),
+    humanizer: t('agent_humanizer'),
+    proofreader: t('agent_proofreader'),
+    polish: t('agent_polish'),
+    reader: t('agent_reader'),
+    summarizer: t('agent_summarizer'),
+    planner: t('agent_planner'),
+    context: t('agent_context'),
+    deviation: t('agent_deviation'),
+    outline: t('agent_outline'),
+    unknown: t('agent_unknown'),
+  };
 
   useEffect(() => {
     api.getWorks().then((data) => {
@@ -71,7 +73,7 @@ export function TraceDashboardPage() {
       setTimeline(timelineRes.timeline || []);
       setTraces(tracesRes);
     } catch (e) {
-      setError(e.message || '加载失败');
+      setError(e.message || t('load_failed'));
     } finally {
       setLoading(false);
     }
@@ -91,39 +93,39 @@ export function TraceDashboardPage() {
     <div className="max-w-5xl mx-auto space-y-5">
       <div className="flex items-center gap-3">
         <Activity size={22} className="text-sky-400" />
-        <h1 className="text-xl font-bold text-slate-100">Trace 调试台</h1>
+        <h1 className="text-xl font-bold text-slate-100">{t('trace_dashboard_title')}</h1>
       </div>
 
       <Card>
         <div className="flex flex-col sm:flex-row gap-3 items-start sm:items-end">
           <div className="flex-1 w-full">
-            <label className="block text-xs text-slate-500 mb-1">作品</label>
+            <label className="block text-xs text-slate-500 mb-1">{t('label_work')}</label>
             <select
               value={workId}
               onChange={(e) => setWorkId(e.target.value)}
               className="w-full bg-slate-900 border border-slate-700 text-slate-200 text-sm rounded-lg px-3 py-2"
             >
-              <option value="">选择作品</option>
+              <option value="">{t('option_select_work')}</option>
               {works.map((w) => (
                 <option key={w.workId} value={w.workId}>{w.title || w.topic || w.workId}</option>
               ))}
             </select>
           </div>
           <div className="flex-1 w-full">
-            <label className="block text-xs text-slate-500 mb-1">或输入 workId</label>
+            <label className="block text-xs text-slate-500 mb-1">{t('label_or_enter_workid')}</label>
             <Input
               value={workId}
               onChange={(e) => setWorkId(e.target.value)}
-              placeholder="works/xxx 或 xxx"
+              placeholder={t('placeholder_workid')}
             />
           </div>
           <Button onClick={handleSearch} disabled={loading || !workId}>
             <Search size={15} className="mr-1.5" />
-            {loading ? '加载中...' : '查询'}
+            {loading ? t('status_loading') : t('btn_query')}
           </Button>
           <Button variant="secondary" onClick={() => workId && loadData(workId)} disabled={loading || !workId}>
             <RefreshCw size={15} className="mr-1.5" />
-            刷新
+            {t('btn_refresh')}
           </Button>
         </div>
       </Card>
@@ -144,7 +146,7 @@ export function TraceDashboardPage() {
               </div>
               <div>
                 <div className="text-2xl font-bold text-slate-100">{totalCalls}</div>
-                <div className="text-xs text-slate-500">总调用次数</div>
+                <div className="text-xs text-slate-500">{t('label_total_calls')}</div>
               </div>
             </Card>
             <Card className="flex items-center gap-3">
@@ -153,7 +155,7 @@ export function TraceDashboardPage() {
               </div>
               <div>
                 <div className="text-2xl font-bold text-slate-100">{formatDuration(totalDuration)}</div>
-                <div className="text-xs text-slate-500">总耗时</div>
+                <div className="text-xs text-slate-500">{t('label_total_duration')}</div>
               </div>
             </Card>
             <Card className="flex items-center gap-3">
@@ -162,7 +164,7 @@ export function TraceDashboardPage() {
               </div>
               <div>
                 <div className="text-2xl font-bold text-slate-100">{totalChars.toLocaleString()}</div>
-                <div className="text-xs text-slate-500">总输出字符</div>
+                <div className="text-xs text-slate-500">{t('label_total_chars')}</div>
               </div>
             </Card>
           </div>
@@ -170,18 +172,18 @@ export function TraceDashboardPage() {
           {/* Tab 切换 */}
           <div className="flex gap-1 bg-slate-900/60 p-1 rounded-lg border border-slate-700/40 w-fit">
             {[
-              { key: 'stats', label: 'Agent 统计' },
-              { key: 'timeline', label: '调用时间线' },
-              { key: 'traces', label: '详细记录' },
-            ].map((t) => (
+              { key: 'stats', label: t('tab_agent_stats') },
+              { key: 'timeline', label: t('tab_timeline') },
+              { key: 'traces', label: t('tab_traces') },
+            ].map((tab) => (
               <button
-                key={t.key}
-                onClick={() => setActiveTab(t.key)}
+                key={tab.key}
+                onClick={() => setActiveTab(tab.key)}
                 className={`px-3 py-1.5 text-xs rounded-md transition-colors ${
-                  activeTab === t.key ? 'bg-sky-500/15 text-sky-400 font-medium' : 'text-slate-400 hover:text-slate-200'
+                  activeTab === tab.key ? 'bg-sky-500/15 text-sky-400 font-medium' : 'text-slate-400 hover:text-slate-200'
                 }`}
               >
-                {t.label}
+                {tab.label}
               </button>
             ))}
           </div>
@@ -189,16 +191,16 @@ export function TraceDashboardPage() {
           {/* Agent 统计 */}
           {activeTab === 'stats' && (
             <Card>
-              <CardTitle className="mb-3">各 Agent 调用统计</CardTitle>
+              <CardTitle className="mb-3">{t('card_agent_stats_title')}</CardTitle>
               <div className="overflow-x-auto">
                 <table className="min-w-full text-sm border border-slate-700/40 rounded-lg">
                   <thead className="bg-slate-900/60 text-slate-300">
                     <tr>
-                      <th className="text-left px-3 py-2 font-medium">Agent</th>
-                      <th className="text-right px-3 py-2 font-medium">调用次数</th>
-                      <th className="text-right px-3 py-2 font-medium">总字符</th>
-                      <th className="text-right px-3 py-2 font-medium">总耗时</th>
-                      <th className="text-right px-3 py-2 font-medium">平均耗时</th>
+                      <th className="text-left px-3 py-2 font-medium">{t('col_agent')}</th>
+                      <th className="text-right px-3 py-2 font-medium">{t('col_call_count')}</th>
+                      <th className="text-right px-3 py-2 font-medium">{t('col_total_chars')}</th>
+                      <th className="text-right px-3 py-2 font-medium">{t('col_total_duration')}</th>
+                      <th className="text-right px-3 py-2 font-medium">{t('col_avg_duration')}</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-slate-700/40">
@@ -213,7 +215,7 @@ export function TraceDashboardPage() {
                     ))}
                     {Object.keys(stats).length === 0 && (
                       <tr>
-                        <td colSpan={5} className="px-3 py-6 text-xs text-slate-500 text-center">暂无 trace 数据</td>
+                        <td colSpan={5} className="px-3 py-6 text-xs text-slate-500 text-center">{t('no_trace_data')}</td>
                       </tr>
                     )}
                   </tbody>
@@ -225,7 +227,7 @@ export function TraceDashboardPage() {
           {/* 调用时间线 */}
           {activeTab === 'timeline' && (
             <Card>
-              <CardTitle className="mb-3">调用时间线</CardTitle>
+              <CardTitle className="mb-3">{t('card_timeline_title')}</CardTitle>
               <div className="space-y-2 max-h-[600px] overflow-auto pr-1">
                 {timeline.map((item, idx) => (
                   <div key={idx} className="flex items-start gap-3 p-3 bg-slate-900/40 border border-slate-700/30 rounded-lg">
@@ -240,17 +242,17 @@ export function TraceDashboardPage() {
                       </div>
                       <div className="flex items-center gap-3 mt-1 text-[10px] text-slate-500">
                         <span className="flex items-center gap-1"><Clock size={10} /> {formatDuration(item.durationMs)}</span>
-                        <span className="flex items-center gap-1"><FileText size={10} /> {(item.chars || 0).toLocaleString()} 字符</span>
+                        <span className="flex items-center gap-1"><FileText size={10} /> {(item.chars || 0).toLocaleString()} {t('unit_chars')}</span>
                         <span>{formatDate(item.timestamp)}</span>
                       </div>
                       {item.promptTemplate && item.promptTemplate !== 'unknown' && (
-                        <div className="mt-1 text-[10px] text-slate-600">模板: {item.promptTemplate}</div>
+                        <div className="mt-1 text-[10px] text-slate-600">{t('label_template')}: {item.promptTemplate}</div>
                       )}
                     </div>
                   </div>
                 ))}
                 {timeline.length === 0 && (
-                  <div className="text-xs text-slate-500 text-center py-6">暂无时间线数据</div>
+                  <div className="text-xs text-slate-500 text-center py-6">{t('no_timeline_data')}</div>
                 )}
               </div>
             </Card>
@@ -260,13 +262,13 @@ export function TraceDashboardPage() {
           {activeTab === 'traces' && (
             <Card>
               <div className="flex items-center justify-between mb-3">
-                <CardTitle>详细记录</CardTitle>
+                <CardTitle>{t('card_traces_title')}</CardTitle>
                 <select
                   value={selectedAgent}
                   onChange={(e) => setSelectedAgent(e.target.value)}
                   className="bg-slate-900 border border-slate-700 text-slate-200 text-xs rounded px-2 py-1"
                 >
-                  <option value="">全部 Agent</option>
+                  <option value="">{t('option_all_agents')}</option>
                   {Object.keys(stats).map((a) => (
                     <option key={a} value={a}>{AGENT_LABELS[a] || a}</option>
                   ))}
@@ -274,36 +276,36 @@ export function TraceDashboardPage() {
               </div>
               <div className="space-y-2 max-h-[600px] overflow-auto pr-1">
                 {(traces?.data || [])
-                  .filter((t) => !selectedAgent || t.agentType === selectedAgent)
-                  .map((t, idx) => (
+                  .filter((trace) => !selectedAgent || trace.agentType === selectedAgent)
+                  .map((trace, idx) => (
                     <div key={idx} className="p-3 bg-slate-900/40 border border-slate-700/30 rounded-lg space-y-2">
                       <div className="flex items-center gap-2 flex-wrap">
-                        <span className="text-xs font-medium text-slate-200">{AGENT_LABELS[t.agentType] || t.agentType}</span>
-                        <span className="text-[10px] text-slate-500">{t.model}</span>
-                        <span className="text-[10px] px-1.5 py-0.5 bg-slate-800 rounded text-slate-400">{t.provider}</span>
-                        <span className="text-[10px] text-slate-500 ml-auto">{formatDate(t.timestamp)}</span>
+                        <span className="text-xs font-medium text-slate-200">{AGENT_LABELS[trace.agentType] || trace.agentType}</span>
+                        <span className="text-[10px] text-slate-500">{trace.model}</span>
+                        <span className="text-[10px] px-1.5 py-0.5 bg-slate-800 rounded text-slate-400">{trace.provider}</span>
+                        <span className="text-[10px] text-slate-500 ml-auto">{formatDate(trace.timestamp)}</span>
                       </div>
                       <div className="text-[10px] text-slate-500 flex gap-3">
-                        <span>⏱ {formatDuration(t.durationMs)}</span>
-                        <span>📝 {(t.chars || 0).toLocaleString()} 字符</span>
-                        <span>🌡 {t.temperature}</span>
+                        <span>⏱ {formatDuration(trace.durationMs)}</span>
+                        <span>📝 {(trace.chars || 0).toLocaleString()} {t('unit_chars')}</span>
+                        <span>🌡 {trace.temperature}</span>
                       </div>
-                      {t.inputPreview && (
+                      {trace.inputPreview && (
                         <div className="text-[10px] text-slate-600 bg-slate-900/60 p-2 rounded border border-slate-700/20">
                           <div className="text-slate-500 mb-0.5">Input Preview:</div>
-                          <div className="truncate">{t.inputPreview}</div>
+                          <div className="truncate">{trace.inputPreview}</div>
                         </div>
                       )}
-                      {t.outputPreview && (
+                      {trace.outputPreview && (
                         <div className="text-[10px] text-slate-600 bg-slate-900/60 p-2 rounded border border-slate-700/20">
                           <div className="text-slate-500 mb-0.5">Output Preview:</div>
-                          <div className="truncate">{t.outputPreview}</div>
+                          <div className="truncate">{trace.outputPreview}</div>
                         </div>
                       )}
                     </div>
                   ))}
-                {(traces?.data || []).filter((t) => !selectedAgent || t.agentType === selectedAgent).length === 0 && (
-                  <div className="text-xs text-slate-500 text-center py-6">暂无详细记录</div>
+                {(traces?.data || []).filter((trace) => !selectedAgent || trace.agentType === selectedAgent).length === 0 && (
+                  <div className="text-xs text-slate-500 text-center py-6">{t('no_trace_detail')}</div>
                 )}
               </div>
             </Card>

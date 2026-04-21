@@ -8,7 +8,7 @@ export function Modal({ open, onClose, title, children, onConfirm, confirmText =
           {children}
         </div>
         <div className="flex justify-end gap-2 mt-5">
-          <button onClick={onClose} className="px-4 py-2 text-sm rounded-lg bg-slate-700 hover:bg-slate-600 text-slate-200 transition">取消</button>
+          <button onClick={onClose} className="px-4 py-2 text-sm rounded-lg bg-slate-700 hover:bg-slate-600 text-slate-200 transition">{t('t_ev02')}</button>
           {onConfirm && (
             <button onClick={onConfirm} disabled={confirmDisabled} className="px-4 py-2 text-sm rounded-lg bg-sky-600 hover:bg-sky-500 text-white transition disabled:opacity-50">
               {confirmText}

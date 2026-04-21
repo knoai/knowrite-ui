@@ -1,13 +1,8 @@
-/**
- * Replace Chinese text with t() calls across all source files.
- */
 const fs = require('fs');
 const path = require('path');
 
 const SRC_DIR = path.join(__dirname, '..', 'src');
 const map = require('./i18n-map-clean.json');
-
-// Sort by length descending to avoid partial matches
 const entries = Object.entries(map).sort((a, b) => b[0].length - a[0].length);
 
 function walkDir(dir) {
@@ -21,63 +16,72 @@ function walkDir(dir) {
   return files;
 }
 
-function containsChinese(str) {
-  return /[\u4e00-\u9fff]/.test(str);
-}
+function hasChinese(str) { return /[\u4e00-\u9fff]/.test(str); }
 
-function isInsideJSXAttribute(line, idx) {
-  // Simple heuristic: before idx, there's a = and no > after it
+function getQuoteChar(line, idx) {
   const before = line.slice(0, idx);
   const after = line.slice(idx);
-  return /=\s*["']?$/.test(before) || /="[^"]*$/.test(before) || /='[^']*$/.test(before);
+  for (let i = before.length - 1; i >= 0; i--) {
+    const c = before[i];
+    if (c === "'" || c === '"' || c === '`') {
+      if (after.indexOf(c) !== -1) {
+        const between = before.slice(i + 1);
+        if (!between.includes(c)) return c;
+      }
+    }
+  }
+  return null;
+}
+
+function isInsideJSXExpr(line, idx) {
+  const before = line.slice(0, idx);
+  if (!/[<>]/.test(before) && !/[<>]/.test(line.slice(idx))) return false;
+  const open = before.lastIndexOf('{');
+  const close = before.lastIndexOf('}');
+  return open !== -1 && open > close;
+}
+
+function isInsideJSXAttr(line, idx) {
+  if (isInsideJSXExpr(line, idx)) return false;
+  const before = line.slice(0, idx);
+  // JSX attribute: prop="..." or prop='...' (no spaces around =)
+  // JS assignment: var = '...' (spaces around =)
+  if (/\s=\s/.test(before)) return false;
+  return /=\s*["']?$/.test(before) || /=\"[^\"]*$/.test(before) || /='[^']*$/.test(before);
 }
 
 function isInsideJSXText(line, idx) {
-  const before = line.slice(0, idx);
-  const after = line.slice(idx);
-  return />[^<]*$/.test(before) && /^[^<>]*</.test(after);
+  if (isInsideJSXExpr(line, idx)) return false;
+  const b = line.slice(0, idx), a = line.slice(idx);
+  return />[^<]*$/.test(b) && /^[^<>]*</.test(a);
 }
 
 function replaceInLine(line, text, key) {
-  let result = line;
-  let idx = result.indexOf(text);
+  let result = line, idx = result.indexOf(text);
   while (idx !== -1) {
     const before = result.slice(0, idx);
     const after = result.slice(idx + text.length);
-
-    // Determine context
+    const qc = getQuoteChar(result, idx);
+    const tQuote = qc === "'" ? '"' : "'";
     let replacement;
-    if (isInsideJSXAttribute(result, idx)) {
-      // JSX attribute: prop="中文" -> prop={t('key')}
-      // Check if the text is inside quotes after an =
-      const attrMatch = before.match(/(\w+)=(["'])$/);
-      if (attrMatch) {
-        // Remove the opening quote before the text
-        replacement = `{t('${key}')}`;
-        result = before.slice(0, -1) + replacement + after.replace(/^["']/, '');
-      } else {
-        replacement = `{t('${key}')}`;
-        result = before + replacement + after;
-      }
+
+    if (isInsideJSXExpr(result, idx)) {
+      replacement = `t(${tQuote}${key}${tQuote})`;
+      if (qc) result = before.slice(0, before.lastIndexOf(qc)) + replacement + after.replace(new RegExp(`^[^${qc}]*${qc}`), '');
+      else result = before + replacement + after;
+    } else if (isInsideJSXAttr(result, idx) && qc) {
+      replacement = `{t(${tQuote}${key}${tQuote})}`;
+      result = before.slice(0, before.lastIndexOf(qc)) + replacement + after.replace(new RegExp(`^[^${qc}]*${qc}`), '');
     } else if (isInsideJSXText(result, idx)) {
-      // JSX text node: >中文< -> >{t('key')}<
       replacement = `{t('${key}')}`;
       result = before + replacement + after;
+    } else if (qc) {
+      replacement = `t(${tQuote}${key}${tQuote})`;
+      result = before.slice(0, before.lastIndexOf(qc)) + replacement + after.replace(new RegExp(`^[^${qc}]*${qc}`), '');
     } else {
-      // JS string context
-      // Check if wrapped in quotes
-      const isQuoted = (before.endsWith('"') || before.endsWith("'") || before.endsWith('`')) &&
-                       (after.startsWith('"') || after.startsWith("'") || after.startsWith('`'));
-      if (isQuoted) {
-        replacement = `t('${key}')`;
-        result = before.slice(0, -1) + replacement + after.slice(1);
-      } else {
-        // Not in quotes, just replace inline
-        replacement = `t('${key}')`;
-        result = before + replacement + after;
-      }
+      replacement = `t('${key}')`;
+      result = before + replacement + after;
     }
-
     idx = result.indexOf(text);
   }
   return result;
@@ -86,65 +90,47 @@ function replaceInLine(line, text, key) {
 for (const file of walkDir(SRC_DIR)) {
   const rel = path.relative(SRC_DIR, file);
   if (rel.startsWith('i18n/')) continue;
+  if (['components/Layout.jsx', 'components/LanguageSwitcher.jsx', 'contexts/I18nContext.jsx', 'main.jsx'].includes(rel)) continue;
 
   let content = fs.readFileSync(file, 'utf-8');
-  if (!containsChinese(content)) continue;
+  if (!hasChinese(content)) continue;
 
-  const originalContent = content;
   const lines = content.split('\n');
   let modified = false;
 
-  // Process each line
   for (let i = 0; i < lines.length; i++) {
     const line = lines[i];
-    if (!containsChinese(line)) continue;
-    // Skip import lines and comment lines
-    if (/^\s*import\s/.test(line)) continue;
-    if (/^\s*\/\//.test(line)) continue;
+    if (!hasChinese(line)) continue;
+    if (/^\s*import\s/.test(line) || /^\s*\/\//.test(line) || /console\./.test(line)) continue;
 
     let newLine = line;
     for (const [text, key] of entries) {
       if (!newLine.includes(text)) continue;
       newLine = replaceInLine(newLine, text, key);
     }
-    if (newLine !== line) {
-      lines[i] = newLine;
-      modified = true;
-    }
+    if (newLine !== line) { lines[i] = newLine; modified = true; }
   }
 
   if (!modified) continue;
-
   content = lines.join('\n');
 
-  // Add import for useI18n if not present
-  if (!content.includes('useI18n')) {
-    // Find the last import line and add after it
+  if (!content.includes('useI18n') && content.includes('export')) {
     const importLines = content.split('\n').filter(l => /^\s*import\s/.test(l));
     if (importLines.length > 0) {
       const lastImport = importLines[importLines.length - 1];
-      const relativePath = path.relative(path.dirname(file), path.join(SRC_DIR, 'contexts')).replace(/\\/g, '/');
-      const importPath = relativePath.startsWith('.') ? relativePath : './' + relativePath;
-      const newImport = `import { useI18n } from '${importPath}/I18nContext';`;
-      content = content.replace(lastImport, lastImport + '\n' + newImport);
+      const rp = path.relative(path.dirname(file), path.join(SRC_DIR, 'contexts')).replace(/\\/g, '/');
+      const ip = rp.startsWith('.') ? rp : './' + rp;
+      content = content.replace(lastImport, lastImport + `\nimport { useI18n } from '${ip}/I18nContext';`);
     }
   }
 
-  // Add const { t } = useI18n(); in component functions
-  // Find export function ComponentName( patterns and add after opening brace
   if (content.includes('useI18n') && !content.includes('const { t } = useI18n()')) {
-    // Try to add in the first export function or const Component
-    const funcPattern = /(export\s+(default\s+)?function\s+\w+\s*\([^)]*\)\s*\{)/;
-    const arrowPattern = /(export\s+(default\s+)?const\s+\w+\s*=\s*(\([^)]*\)|\w+)\s*=>\s*\{)/;
-    const match = content.match(funcPattern) || content.match(arrowPattern);
-    if (match) {
-      const insert = match[1] + '\n  const { t } = useI18n();';
-      content = content.replace(match[1], insert);
-    }
+    const m = content.match(/(export\s+(default\s+)?function\s+\w+\s*\([^)]*\)\s*\{)/)
+         || content.match(/(export\s+(default\s+)?const\s+\w+\s*=\s*(\([^)]*\)|\w+)\s*=>\s*\{)/);
+    if (m) content = content.replace(m[1], m[1] + '\n  const { t } = useI18n();');
   }
 
   fs.writeFileSync(file, content, 'utf-8');
   console.log(`Modified: ${rel}`);
 }
-
-console.log('Done replacing Chinese text with t() calls');
+console.log('Done');

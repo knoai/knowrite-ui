@@ -12,6 +12,7 @@ import { ReviewList } from '../components/ReviewList';
 import { EmptyState, WorkEmptyState } from '../components/ui/EmptyState';
 import { Tooltip } from '../components/ui/Tooltip';
 import { useWork } from '../contexts/WorkContext';
+import { useI18n } from '../contexts/I18nContext';
 import * as api from '../api/novel';
 import { WorldLorePanel } from '../components/world/WorldLorePanel';
 import MarkdownRenderer from '../components/MarkdownRenderer';
@@ -19,37 +20,39 @@ import { CharacterPanel } from '../components/world/CharacterPanel';
 import { PlotLinePanel } from '../components/world/PlotLinePanel';
 import { MapPanel } from '../components/world/MapPanel';
 import { TemplatePanel } from '../components/world/TemplatePanel';
-
-const TAB_GROUPS = [
-  {
-    label: '核心创作',
-    color: 'sky',
-    tabs: [
-      { key: 'overview', label: '概览', icon: FileText },
-    ],
-  },
-  {
-    label: '创作辅助',
-    color: 'violet',
-    tabs: [
-      { key: 'world', label: '世界观', icon: BookOpen },
-      { key: 'characters', label: '人物', icon: Users },
-      { key: 'plot', label: '剧情线', icon: GitBranch },
-      { key: 'map', label: '地图', icon: Map },
-      { key: 'templates', label: '套路', icon: Sparkles },
-    ],
-  },
-  {
-    label: '数据分析',
-    color: 'emerald',
-    tabs: [
-      { key: 'fitness', label: 'Fitness', icon: BarChart3 },
-      { key: 'reviews', label: '评审记录', icon: ClipboardCheck },
-    ],
-  },
-];
+import { useI18n } from '../contexts/I18nContext';
 
 export function WorksPage() {
+  const { t } = useI18n();
+  const TAB_GROUPS = [
+    {
+      label: t('tab_group_core'),
+      color: 'sky',
+      tabs: [
+        { key: 'overview', label: t('tab_overview'), icon: FileText },
+      ],
+    },
+    {
+      label: t('tab_group_assist'),
+      color: 'violet',
+      tabs: [
+        { key: 'world', label: t('tab_world'), icon: BookOpen },
+        { key: 'characters', label: t('tab_characters'), icon: Users },
+        { key: 'plot', label: t('tab_plot'), icon: GitBranch },
+        { key: 'map', label: t('tab_map'), icon: Map },
+        { key: 'templates', label: t('tab_templates'), icon: Sparkles },
+      ],
+    },
+    {
+      label: t('tab_group_data'),
+      color: 'emerald',
+      tabs: [
+        { key: 'fitness', label: 'Fitness', icon: BarChart3 },
+        { key: 'reviews', label: t('tab_reviews'), icon: ClipboardCheck },
+      ],
+    },
+  ];
+  const { t } = useI18n();
   const { workId } = useParams();
   const navigate = useNavigate();
   const {
@@ -81,13 +84,13 @@ export function WorksPage() {
   const handleBack = () => navigate('/works');
 
   const handleDelete = async (id) => {
-    if (!window.confirm(`确定要删除作品「${id}」吗？此操作不可撤销。`)) return;
+    if (!window.confirm(t('confirm_delete_work', { id }))) return;
     try {
       await api.deleteWork(id);
       await refreshWorks();
-      setStatus('作品已删除');
+      setStatus(t('msg_work_deleted'));
     } catch (e) {
-      setStatus('删除失败: ' + e.message);
+      setStatus(t('err_delete') + e.message);
     }
   };
 
@@ -130,13 +133,13 @@ export function WorksPage() {
         setPlanModal({ open: true, plan: planResult, planning: false });
       } catch (e) {
         setPlanModal({ open: false, plan: null, planning: false });
-        setStatus('Plan 预演失败: ' + e.message);
+        setStatus(t('err_plan_failed') + e.message);
       }
       return;
     }
 
     setStreamText('');
-    setStatus('正在续写下一章...');
+    setStatus(t('status_continuing'));
     setContinuing(true);
     setSteps([]);
     setPlanModal({ open: false, plan: null, planning: false });
@@ -155,10 +158,10 @@ export function WorksPage() {
           setSteps(prev => prev.map(s => s.step === ev.step ? { ...s, status: 'done' } : s));
         }
       });
-      setStatus('续写完成');
+      setStatus(t('msg_continue_done'));
       await refreshCurrentWork();
     } catch (e) {
-      if (e.name !== 'AbortError') setStatus('错误: ' + e.message);
+      if (e.name !== 'AbortError') setStatus(t('err_generic') + e.message);
     } finally {
       setContinuing(false);
     }
@@ -223,17 +226,17 @@ export function WorksPage() {
                 <BookOpen size={20} className="text-violet-400" />
               </div>
               <div>
-                <CardTitle className="!text-slate-100">我的作品</CardTitle>
-                <p className="text-xs text-slate-500 mt-0.5">点击作品查看详情、续写或管理</p>
+                <CardTitle className="!text-slate-100">{t('t_cv11vc')}</CardTitle>
+                <p className="text-xs text-slate-500 mt-0.5">{t('t_ibpi')}</p>
               </div>
             </div>
-            <Button size="sm" variant="ghost" onClick={refreshWorks}>刷新</Button>
+            <Button size="sm" variant="ghost" onClick={refreshWorks}>{t('t_ejix')}</Button>
           </CardHeader>
           <div className="px-5 pb-5">
             {loadingWorks && (
               <div className="flex items-center gap-2 text-slate-400 text-sm py-8 justify-center">
                 <span className="inline-block w-4 h-4 border-2 border-slate-600 border-t-sky-400 rounded-full animate-spin" />
-                加载中...
+                {t('status_loading')}
               </div>
             )}
             {!loadingWorks && works.length > 0 && (
@@ -254,7 +257,7 @@ export function WorksPage() {
 
   const info = currentWorkData;
   const hasVolumes = info?.volumes && info.volumes.length > 0;
-  const title = info?.topic ? info.topic.split('\n')[0].trim() : '未命名作品';
+  const title = info?.topic ? info.topic.split('\n')[0].trim() : t('title_unnamed');
   const totalChars = info?.chapters?.reduce((sum, ch) => sum + (ch.chars || 0), 0) || 0;
   const outlineChapters = parseOutlineTree(info?.outlineDetailed || '');
 
@@ -266,21 +269,21 @@ export function WorksPage() {
           <div className="min-w-0">
             <div className="flex items-center gap-2 text-xs text-slate-500 mb-1.5">
               <button onClick={handleBack} className="flex items-center gap-1 hover:text-sky-400 transition">
-                <ArrowLeft size={12} /> 返回列表
+                <ArrowLeft size={12} /> {t('btn_back_list')}
               </button>
               <span>/</span>
-              <span>作品详情</span>
+              <span>{t('t_adfhvo')}</span>
             </div>
             <h2 className="text-xl font-bold text-slate-50 truncate mb-2">{title}</h2>
             <div className="flex flex-wrap items-center gap-2">
-              <Badge variant="default">{info?.style || '默认风格'}</Badge>
-              <Badge variant="info">{info?.chapters?.length || 0} 章</Badge>
-              <Badge variant="success">{Math.round(totalChars / 1000)}K 字</Badge>
-              {info?.writingMode === 'free' && <Badge variant="purple">自由风</Badge>}
+              <Badge variant="default">{t('t_kmfugq')}</Badge>
+              <Badge variant="info">{info?.chapters?.length || 0}{t('unit_chapters')}</Badge>
+              <Badge variant="success">{Math.round(totalChars / 1000)}K{t('unit_chars')}</Badge>
+              {info?.writingMode === 'free' && <Badge variant="purple">{t('t_jlt0n')}</Badge>}
               {hasVolumes && (
                 <Select value={targetVolume} onChange={(e) => setTargetVolume(parseInt(e.target.value, 10))} className="w-auto text-xs py-1 px-2 h-7">
                   {info.volumes.map((v) => (
-                    <option key={v.number} value={v.number}>第{v.number}卷{v.title ? ` · ${v.title}` : ''}</option>
+                    <option key={v.number} value={v.number}>{t('label_vol_prefix')}{v.number}{t('label_vol_suffix')}{v.title ? ' · ' + v.title : ''}</option>
                   ))}
                 </Select>
               )}
@@ -289,11 +292,11 @@ export function WorksPage() {
           <div className="flex gap-2">
             <Button variant="primary" size="sm" onClick={handleContinue} disabled={continuing}>
               <Play size={14} />
-              {continuing ? '续写中...' : '续写下一章'}
+              {continuing ? t('status_continuing_ch') : t('btn_continue_next')}
             </Button>
             <Button variant="secondary" size="sm" onClick={() => navigate(`/plan?workId=${workId}`)}>
               <Lightbulb size={14} />
-              本章预演
+              {t('btn_chapter_preview')}
             </Button>
             <Button variant="ghost" size="sm" onClick={() => navigate(`/traces?workId=${workId}`)}>
               <Activity size={14} />
@@ -301,11 +304,11 @@ export function WorksPage() {
             </Button>
             <Button variant="ghost" size="sm" onClick={() => navigate(`/memory/${workId}`)}>
               <BrainCircuit size={14} />
-              记忆
+              {t('btn_memory')}
             </Button>
             <Button variant="accent" size="sm" onClick={handleExport}>
               <Download size={14} />
-              导出
+              {t('btn_export')}
             </Button>
           </div>
         </div>
@@ -315,7 +318,7 @@ export function WorksPage() {
         {/* 步骤进度 */}
         {steps.length > 0 && (
           <div className="px-5 pb-3">
-            <div className="text-xs text-slate-500 font-medium mb-1.5">创作流程</div>
+            <div className="text-xs text-slate-500 font-medium mb-1.5">{t('t_aoyuyz')}</div>
             <div className="flex flex-wrap gap-2">
               {steps.map((s) => (
                 <div key={s.step} className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs border ${
@@ -376,20 +379,20 @@ export function WorksPage() {
                 {/* 统计卡片 */}
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
                   <div className="bg-slate-900/40 border border-slate-700/30 rounded-xl p-4">
-                    <div className="text-xs text-slate-500 mb-1">总章节</div>
+                    <div className="text-xs text-slate-500 mb-1">{t('t_ep1ct')}</div>
                     <div className="text-2xl font-bold text-sky-400">{info?.chapters?.length || 0}</div>
                   </div>
                   <div className="bg-slate-900/40 border border-slate-700/30 rounded-xl p-4">
-                    <div className="text-xs text-slate-500 mb-1">总字数</div>
+                    <div className="text-xs text-slate-500 mb-1">{t('t_ejiic')}</div>
                     <div className="text-2xl font-bold text-emerald-400">{Math.round(totalChars / 1000)}K</div>
                   </div>
                   <div className="bg-slate-900/40 border border-slate-700/30 rounded-xl p-4">
-                    <div className="text-xs text-slate-500 mb-1">风格</div>
-                    <div className="text-lg font-bold text-slate-200 truncate">{info?.style || '默认'}</div>
+                    <div className="text-xs text-slate-500 mb-1">{t('t_qka6')}</div>
+                    <div className="text-lg font-bold text-slate-200 truncate">{t('t_rs98')}</div>
                   </div>
                   <div className="bg-slate-900/40 border border-slate-700/30 rounded-xl p-4">
-                    <div className="text-xs text-slate-500 mb-1">写作模式</div>
-                    <div className="text-lg font-bold text-slate-200">{info?.writingMode === 'free' ? '自由风' : '工业风'}</div>
+                    <div className="text-xs text-slate-500 mb-1">{t('t_amn67l')}</div>
+                    <div className="text-lg font-bold text-slate-200">{t('t_e5861')}</div>
                   </div>
                 </div>
                 {/* 简介大纲 */}
@@ -397,14 +400,14 @@ export function WorksPage() {
                   <button onClick={() => toggleSection('theme')} className="w-full flex items-center justify-between px-4 py-3 hover:bg-slate-800/30 transition">
                     <div className="flex items-center gap-2">
                       <AlignLeft size={14} className="text-sky-400" />
-                      <span className="text-sm font-medium text-slate-200">简介大纲</span>
+                      <span className="text-sm font-medium text-slate-200">{t('t_fwqx9y')}</span>
                     </div>
                     {openSections.theme ? <ChevronDown size={14} className="text-slate-500" /> : <ChevronRight size={14} className="text-slate-500" />}
                   </button>
                   {openSections.theme && (
                     <div className="px-4 pb-4">
                       <div className="text-sm text-slate-300 leading-relaxed max-h-[400px] overflow-y-auto">
-                        <MarkdownRenderer text={info?.outlineTheme || '暂无简介大纲'} />
+                        <MarkdownRenderer text={info?.outlineTheme || t('msg_no_outline_brief')} />
                       </div>
                     </div>
                   )}
@@ -415,9 +418,9 @@ export function WorksPage() {
                   <button onClick={() => toggleSection('outline')} className="w-full flex items-center justify-between px-4 py-3 hover:bg-slate-800/30 transition">
                     <div className="flex items-center gap-2">
                       <ListTree size={14} className="text-violet-400" />
-                      <span className="text-sm font-medium text-slate-200">详细纲章</span>
+                      <span className="text-sm font-medium text-slate-200">{t('t_i6etce')}</span>
                       {outlineChapters.length > 0 && (
-                        <span className="text-[10px] text-slate-500 bg-slate-800/60 px-1.5 py-0.5 rounded">{outlineChapters.length} 章</span>
+                        <span className="text-[10px] text-slate-500 bg-slate-800/60 px-1.5 py-0.5 rounded">{outlineChapters.length}{t('unit_chapters')}</span>
                       )}
                     </div>
                     {openSections.outline ? <ChevronDown size={14} className="text-slate-500" /> : <ChevronRight size={14} className="text-slate-500" />}
@@ -425,7 +428,7 @@ export function WorksPage() {
                   {openSections.outline && (
                     <div className="px-4 pb-4 space-y-1">
                       {outlineChapters.length === 0 ? (
-                        <div className="text-sm text-slate-500 py-2">暂无详细纲章</div>
+                        <div className="text-sm text-slate-500 py-2">{t('t_f6qmac')}</div>
                       ) : (
                         outlineChapters.map((ch, idx) => {
                           const isOpen = expandedOutlineChapters.has(idx);
@@ -433,7 +436,7 @@ export function WorksPage() {
                             <div key={idx} className="border border-slate-800/40 rounded-lg overflow-hidden">
                               <button onClick={() => toggleOutlineChapter(idx)} className="w-full flex items-center gap-2 px-3 py-2 hover:bg-slate-800/30 transition text-left">
                                 {isOpen ? <ChevronDown size={12} className="text-slate-500 shrink-0" /> : <ChevronRight size={12} className="text-slate-500 shrink-0" />}
-                                <span className="text-xs text-slate-400 shrink-0">第{idx + 1}章</span>
+                                <span className="text-xs text-slate-400 shrink-0">{t('label_ch_prefix')}{idx + 1}{t('label_ch_suffix')}</span>
                                 <span className="text-sm text-slate-200 truncate">{ch.title}</span>
                               </button>
                               {isOpen && (
@@ -454,9 +457,9 @@ export function WorksPage() {
                   <button onClick={() => toggleSection('tree')} className="w-full flex items-center justify-between px-4 py-3 hover:bg-slate-800/30 transition">
                     <div className="flex items-center gap-2">
                       <GitBranch size={14} className="text-emerald-400" />
-                      <span className="text-sm font-medium text-slate-200">章节内容</span>
+                      <span className="text-sm font-medium text-slate-200">{t('t_g1fyly')}</span>
                       {info?.chapters?.length > 0 && (
-                        <span className="text-[10px] text-slate-500 bg-slate-800/60 px-1.5 py-0.5 rounded">{info.chapters.length} 章</span>
+                        <span className="text-[10px] text-slate-500 bg-slate-800/60 px-1.5 py-0.5 rounded">{info.chapters.length}{t('unit_chapters')}</span>
                       )}
                     </div>
                     {openSections.tree ? <ChevronDown size={14} className="text-slate-500" /> : <ChevronRight size={14} className="text-slate-500" />}
@@ -464,13 +467,13 @@ export function WorksPage() {
                   {openSections.tree && (
                     <div className="px-4 pb-4 space-y-1">
                       {(!info?.chapters || info.chapters.length === 0) ? (
-                        <div className="text-sm text-slate-500 py-2">暂无章节</div>
+                        <div className="text-sm text-slate-500 py-2">{t('t_dcyym8')}</div>
                       ) : hasVolumes ? (
                         // 多卷结构：按卷分组
                         info.volumes.map((vol) => (
                           <div key={vol.number} className="border border-slate-800/40 rounded-lg overflow-hidden">
                             <div className="px-3 py-2 bg-slate-800/30 text-sm font-medium text-slate-200">
-                              第{vol.number}卷{vol.title ? ` · ${vol.title}` : ''}
+                              {t('label_vol_prefix')}{vol.number}{t('label_vol_suffix')}{vol.title ? ' · ' + vol.title : ''}
                             </div>
                             <div className="px-2 pb-2 space-y-0.5">
                               {(info.chapters || []).filter(ch => ch.volume === vol.number || (!ch.volume && vol.number === 1)).map((ch) => {
@@ -480,9 +483,9 @@ export function WorksPage() {
                                   <div key={ch.number}>
                                     <button onClick={() => toggleChapter(ch.number)} className="w-full flex items-center gap-2 px-2 py-1.5 hover:bg-slate-800/30 transition rounded text-left">
                                       {isOpen ? <ChevronDown size={12} className="text-slate-500 shrink-0" /> : <ChevronRight size={12} className="text-slate-500 shrink-0" />}
-                                      <span className="text-xs text-slate-400 shrink-0">第{ch.number}章</span>
-                                      <span className="text-sm text-slate-200 truncate">{ch.title || '未命名章节'}</span>
-                                      <span className="text-[10px] text-slate-600 ml-auto shrink-0">{ch.chars || 0} 字</span>
+                                      <span className="text-xs text-slate-400 shrink-0">{t('label_ch_prefix')}{ch.number}{t('label_ch_suffix')}</span>
+                                      <span className="text-sm text-slate-200 truncate">{t('t_bsughw')}</span>
+                                      <span className="text-[10px] text-slate-600 ml-auto shrink-0">{ch.chars || 0}{t('unit_chars')}</span>
                                     </button>
                                     {isOpen && text && (
                                       <div className="px-2 pb-2 pl-7">
@@ -506,9 +509,9 @@ export function WorksPage() {
                             <div key={ch.number} className="border border-slate-800/40 rounded-lg overflow-hidden">
                               <button onClick={() => toggleChapter(ch.number)} className="w-full flex items-center gap-2 px-3 py-2 hover:bg-slate-800/30 transition text-left">
                                 {isOpen ? <ChevronDown size={12} className="text-slate-500 shrink-0" /> : <ChevronRight size={12} className="text-slate-500 shrink-0" />}
-                                <span className="text-xs text-slate-400 shrink-0">第{ch.number}章</span>
-                                <span className="text-sm text-slate-200 truncate">{ch.title || '未命名章节'}</span>
-                                <span className="text-[10px] text-slate-600 ml-auto shrink-0">{ch.chars || 0} 字</span>
+                                <span className="text-xs text-slate-400 shrink-0">{t('label_ch_prefix')}{ch.number}{t('label_ch_suffix')}</span>
+                                <span className="text-sm text-slate-200 truncate">{t('t_bsughw')}</span>
+                                <span className="text-[10px] text-slate-600 ml-auto shrink-0">{ch.chars || 0}{t('unit_chars')}</span>
                               </button>
                               {isOpen && text && (
                                 <div className="px-3 pb-3 pl-8">
@@ -527,9 +530,9 @@ export function WorksPage() {
 
                 {/* 内容预览 */}
                 <div className="bg-slate-900/30 border border-slate-800/50 rounded-xl p-4">
-                  <div className="text-xs text-slate-500 mb-2">正文预览</div>
+                  <div className="text-xs text-slate-500 mb-2">{t('t_dz7q6g')}</div>
                   <div className="text-sm text-slate-300 leading-relaxed max-h-[400px] overflow-y-auto">
-                    <MarkdownRenderer text={(info?.fullText || '').substring(0, 3000) + ((info?.fullText?.length || 0) > 3000 ? '\n\n... (内容过长已截断，请导出查看完整内容) ...' : '')} />
+                    <MarkdownRenderer text={(info?.fullText || '').substring(0, 3000) + ((info?.fullText?.length || 0) > 3000 ? '\n\n... (内容过长已截断，请{t('btn_export')}查看完整内容) ...' : '')} />
                   </div>
                 </div>
               </div>
@@ -556,7 +559,7 @@ export function WorksPage() {
             <div className="p-5 border-b border-slate-700/40 flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <Lightbulb size={18} className="text-amber-400" />
-                <h3 className="text-base font-bold text-slate-100">章节节拍规划</h3>
+                <h3 className="text-base font-bold text-slate-100">{t('t_71rx2z')}</h3>
               </div>
               <button onClick={() => setPlanModal({ ...planModal, open: false, planning: false })} className="text-slate-500 hover:text-slate-300">
                 ✕
@@ -567,7 +570,7 @@ export function WorksPage() {
               {planModal.planning && (
                 <div className="flex items-center gap-2 text-slate-400 text-sm py-8 justify-center">
                   <span className="inline-block w-4 h-4 border-2 border-slate-600 border-t-amber-400 rounded-full animate-spin" />
-                  正在生成本章节拍规划...
+                  {t('status_generating_plan')}
                 </div>
               )}
 
@@ -576,14 +579,14 @@ export function WorksPage() {
                   <div className="flex gap-3">
                     {planModal.plan.overallTone && (
                       <div className="flex-1 p-3 bg-amber-500/5 border border-amber-500/15 rounded-lg">
-                        <div className="text-[10px] text-amber-400/70 mb-0.5">整体基调</div>
+                        <div className="text-[10px] text-amber-400/70 mb-0.5">{t('t_d4prl4')}</div>
                         <div className="text-sm text-slate-200">{planModal.plan.overallTone}</div>
                       </div>
                     )}
                     <div className="flex-1 p-3 bg-sky-500/5 border border-sky-500/15 rounded-lg">
-                      <div className="text-[10px] text-sky-400/70 mb-0.5">预计总字数</div>
+                      <div className="text-[10px] text-sky-400/70 mb-0.5">{t('t_oxhtu1')}</div>
                       <div className="text-sm text-slate-200">
-                        {(planModal.plan.beats?.reduce((s, b) => s + (b.estimatedWords || 0), 0) || 0).toLocaleString()} 字
+                        {(planModal.plan.beats?.reduce((s, b) => s + (b.estimatedWords || 0), 0) || 0).toLocaleString()}{t('unit_chars')}
                       </div>
                     </div>
                   </div>
@@ -599,9 +602,9 @@ export function WorksPage() {
                             beat.type === 'falling' ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20' :
                             'bg-violet-500/10 text-violet-400 border-violet-500/20'
                           }`}>
-                            {beat.type === 'hook' ? '钩子' : beat.type === 'rising' ? '升级' : beat.type === 'climax' ? '高潮' : beat.type === 'falling' ? '回落' : '悬念'}
+                            {beat.type === 'hook' ? t('beat_hook') : beat.type === 'rising' ? t('beat_rising') : beat.type === 'climax' ? t('beat_climax') : beat.type === 'falling' ? t('beat_falling') : t('beat_suspense')}
                           </span>
-                          <span className="text-[10px] text-slate-500">{beat.estimatedWords || '?'} 字</span>
+                          <span className="text-[10px] text-slate-500">{beat.estimatedWords || '?'}{t('unit_chars')}</span>
                         </div>
                         <div className="text-sm text-slate-300 leading-relaxed">{beat.description}</div>
                         {beat.mustInclude?.length > 0 && (
@@ -617,7 +620,7 @@ export function WorksPage() {
 
                   {planModal.plan.riskFlags?.length > 0 && (
                     <div className="p-3 bg-amber-500/5 border border-amber-500/15 rounded-lg">
-                      <div className="text-[10px] text-amber-400/70 mb-1">风险提示</div>
+                      <div className="text-[10px] text-amber-400/70 mb-1">{t('t_jwcjyd')}</div>
                       <ul className="space-y-0.5">
                         {planModal.plan.riskFlags.map((flag, i) => (
                           <li key={i} className="text-xs text-slate-400">• {flag}</li>
@@ -629,23 +632,23 @@ export function WorksPage() {
               )}
 
               {!planModal.planning && !planModal.plan && (
-                <div className="text-sm text-slate-500 text-center py-8">未获取到节拍规划（Plan 模式可能已关闭）</div>
+                <div className="text-sm text-slate-500 text-center py-8">{t('_plan_')}</div>
               )}
             </div>
 
             <div className="p-5 border-t border-slate-700/40 flex justify-end gap-3">
               <Button variant="secondary" size="sm" onClick={() => setPlanModal({ ...planModal, open: false, planning: false })}>
-                取消
+                {t('btn_cancel')}
               </Button>
               {planModal.plan && (
                 <Button variant="ghost" size="sm" onClick={() => { setPlanModal({ ...planModal, plan: null }); handleContinue(); }} disabled={planModal.planning}>
                   <RefreshCw size={14} className="mr-1.5" />
-                  重新规划
+                  {t('btn_replan')}
                 </Button>
               )}
               <Button size="sm" onClick={handleContinue} disabled={planModal.planning || !planModal.plan}>
                 <Play size={14} className="mr-1.5" />
-                确认并续写
+                {t('btn_confirm_continue')}
               </Button>
             </div>
           </div>

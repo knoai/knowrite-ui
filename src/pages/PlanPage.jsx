@@ -4,6 +4,7 @@ import { Lightbulb, Play, CheckCircle, AlertTriangle, BookOpen, Clock, Loader2 }
 import { Card, CardTitle } from '../components/ui/Card';
 import { Button } from '../components/ui/Button';
 import * as api from '../api/novel';
+import { useI18n } from '../contexts/I18nContext';
 
 const BEAT_TYPE_LABELS = {
   hook: '开篇钩子',
@@ -22,6 +23,7 @@ const BEAT_TYPE_COLORS = {
 };
 
 export function PlanPage() {
+  const { t } = useI18n();
   const [searchParams, setSearchParams] = useSearchParams();
   const [workId, setWorkId] = useState(searchParams.get('workId') || '');
   const [works, setWorks] = useState([]);
@@ -108,32 +110,32 @@ export function PlanPage() {
     <div className="max-w-4xl mx-auto space-y-5">
       <div className="flex items-center gap-3">
         <Lightbulb size={22} className="text-amber-400" />
-        <h1 className="text-xl font-bold text-slate-100">章节节拍规划</h1>
+        <h1 className="text-xl font-bold text-slate-100">{t('t_71rx2z')}</h1>
       </div>
 
       <Card>
         <div className="flex flex-col sm:flex-row gap-3 items-start sm:items-end">
           <div className="flex-1 w-full">
-            <label className="block text-xs text-slate-500 mb-1">作品</label>
+            <label className="block text-xs text-slate-500 mb-1">{t('t_dyp1')}</label>
             <select
               value={workId}
               onChange={(e) => setWorkId(e.target.value)}
               className="w-full bg-slate-900 border border-slate-700 text-slate-200 text-sm rounded-lg px-3 py-2"
             >
-              <option value="">选择作品</option>
+              <option value="">{t('t_ikvtut')}</option>
               {works.map((w) => (
                 <option key={w.workId} value={w.workId}>{w.title || w.topic || w.workId}</option>
               ))}
             </select>
           </div>
           <div className="w-32">
-            <label className="block text-xs text-slate-500 mb-1">章节号（可选）</label>
+            <label className="block text-xs text-slate-500 mb-1">{t('t_imkr9')}</label>
             <input
               type="number"
               min={1}
               value={chapterNumber}
               onChange={(e) => setChapterNumber(e.target.value)}
-              placeholder="自动"
+              placeholder={t("t_mjum")}
               className="w-full bg-slate-900 border border-slate-700 text-slate-200 text-sm rounded-lg px-3 py-2"
             />
           </div>
@@ -161,7 +163,7 @@ export function PlanPage() {
                   <BookOpen size={18} className="text-amber-400" />
                 </div>
                 <div>
-                  <div className="text-xs text-slate-500">整体基调</div>
+                  <div className="text-xs text-slate-500">{t('t_d4prl4')}</div>
                   <div className="text-sm font-medium text-slate-200">{plan.overallTone}</div>
                 </div>
               </Card>
@@ -171,7 +173,7 @@ export function PlanPage() {
                 <Clock size={18} className="text-sky-400" />
               </div>
               <div>
-                <div className="text-xs text-slate-500">预计总字数</div>
+                <div className="text-xs text-slate-500">{t('t_oxhtu1')}</div>
                 <div className="text-sm font-medium text-slate-200">{totalWords.toLocaleString()} 字</div>
               </div>
             </Card>
@@ -209,7 +211,7 @@ export function PlanPage() {
               <div className="flex items-start gap-2">
                 <AlertTriangle size={16} className="text-amber-400 shrink-0 mt-0.5" />
                 <div>
-                  <div className="text-sm font-medium text-amber-400 mb-1">风险提示</div>
+                  <div className="text-sm font-medium text-amber-400 mb-1">{t('t_jwcjyd')}</div>
                   <ul className="space-y-1">
                     {plan.riskFlags.map((flag, i) => (
                       <li key={i} className="text-xs text-slate-400">• {flag}</li>

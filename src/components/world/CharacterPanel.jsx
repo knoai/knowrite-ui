@@ -4,12 +4,14 @@ import { Card, CardHeader, CardTitle } from '../ui/Card';
 import { Input, Textarea } from '../ui/Input';
 import { Modal } from './Modal';
 import * as api from '../../api/novel';
+import { useI18n } from '../../contexts/I18nContext';
 
 const ROLE_TYPES = ['主角', '反派', '配角', '龙套'];
 const STATUS_TYPES = ['存活', '死亡', '失踪', '囚禁', '飞升'];
 const RELATION_TYPES = ['师徒', '敌对', '恋人', '君臣', '血亲', '同盟', '主仆', '竞争', '其他'];
 
 export function CharacterPanel({ workId }) {
+  const { t } = useI18n();
   const [characters, setCharacters] = useState([]);
   const [relations, setRelations] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -54,7 +56,7 @@ export function CharacterPanel({ workId }) {
   return (
     <div className="space-y-4">
       <CardHeader className="!mb-0">
-        <CardTitle className="flex items-center gap-2"><Users size={16} /> 人物设定</CardTitle>
+        <CardTitle className="flex items-center gap-2"><Users size={16} />{t('t_aewdl7')}</CardTitle>
         <div className="flex gap-2">
           <button onClick={openRelCreate} className="flex items-center gap-1 text-sm px-3 py-1.5 rounded-lg bg-slate-700 hover:bg-slate-600 text-slate-200 transition">
             <Link2 size={14} /> 关系
@@ -65,7 +67,7 @@ export function CharacterPanel({ workId }) {
         </div>
       </CardHeader>
 
-      {loading && <div className="text-slate-400 text-sm py-4">加载中...</div>}
+      {loading && <div className="text-slate-400 text-sm py-4">{t('t_27k1ha')}</div>}
 
       {/* 人物卡片 */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
@@ -97,16 +99,16 @@ export function CharacterPanel({ workId }) {
       {/* 关系表 */}
       {relations.length > 0 && (
         <div className="mt-4">
-          <h4 className="text-sm font-medium text-sky-400 mb-2">人物关系</h4>
+          <h4 className="text-sm font-medium text-sky-400 mb-2">{t('t_aemn87')}</h4>
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
                 <tr className="border-b border-slate-700/40 text-xs text-slate-500">
                   <th className="text-left py-2 px-2">From</th>
-                  <th className="text-left py-2 px-2">关系</th>
+                  <th className="text-left py-2 px-2">{t('t_ejfs')}</th>
                   <th className="text-left py-2 px-2">To</th>
-                  <th className="text-left py-2 px-2">强度</th>
-                  <th className="text-right py-2 px-2">操作</th>
+                  <th className="text-left py-2 px-2">{t('t_gpt8')}</th>
+                  <th className="text-right py-2 px-2">{t('t_hkxb')}</th>
                 </tr>
               </thead>
               <tbody>
@@ -128,13 +130,13 @@ export function CharacterPanel({ workId }) {
       )}
 
       {!loading && characters.length === 0 && (
-        <div className="text-center text-slate-500 text-sm py-8 bg-slate-900/20 rounded-lg border border-dashed border-slate-700">暂无人物，点击上方按钮添加</div>
+        <div className="text-center text-slate-500 text-sm py-8 bg-slate-900/20 rounded-lg border border-dashed border-slate-700">{t('t_j5s5')}</div>
       )}
 
       <Modal open={charModal} onClose={() => setCharModal(false)} title={editingChar ? '编辑人物' : '新增人物'} onConfirm={saveChar} confirmDisabled={!charForm.name}>
         <div className="grid grid-cols-2 gap-3">
-          <Input value={charForm.name} onChange={e => setCharForm({ ...charForm, name: e.target.value })} placeholder="姓名" />
-          <Input value={charForm.alias} onChange={e => setCharForm({ ...charForm, alias: e.target.value })} placeholder="别名" />
+          <Input value={charForm.name} onChange={e => setCharForm({ ...charForm, name: e.target.value })} placeholder={t("t_fqmy")} />
+          <Input value={charForm.alias} onChange={e => setCharForm({ ...charForm, alias: e.target.value })} placeholder={t("t_efr6")} />
         </div>
         <div className="grid grid-cols-2 gap-3">
           <select value={charForm.roleType} onChange={e => setCharForm({ ...charForm, roleType: e.target.value })} className="w-full px-3 py-2 rounded-lg border border-slate-600 bg-slate-900/60 text-slate-50 text-sm">
@@ -144,26 +146,26 @@ export function CharacterPanel({ workId }) {
             {STATUS_TYPES.map(t => <option key={t} value={t}>{t}</option>)}
           </select>
         </div>
-        <Input value={charForm.appearance} onChange={e => setCharForm({ ...charForm, appearance: e.target.value })} placeholder="外貌特征" />
-        <Input value={charForm.personality} onChange={e => setCharForm({ ...charForm, personality: e.target.value })} placeholder="性格特点" />
+        <Input value={charForm.appearance} onChange={e => setCharForm({ ...charForm, appearance: e.target.value })} placeholder={t("t_btnaam")} />
+        <Input value={charForm.personality} onChange={e => setCharForm({ ...charForm, personality: e.target.value })} placeholder={t("t_ckezv9")} />
         <Input value={charForm.goals} onChange={e => setCharForm({ ...charForm, goals: e.target.value })} placeholder="目标/动机" />
-        <Textarea value={charForm.background} onChange={e => setCharForm({ ...charForm, background: e.target.value })} placeholder="背景故事..." />
-        <Textarea value={charForm.notes} onChange={e => setCharForm({ ...charForm, notes: e.target.value })} placeholder="备注..." />
+        <Textarea value={charForm.background} onChange={e => setCharForm({ ...charForm, background: e.target.value })} placeholder={t("t_fnf9tn")} />
+        <Textarea value={charForm.notes} onChange={e => setCharForm({ ...charForm, notes: e.target.value })} placeholder={t("t_6odr0t")} />
       </Modal>
 
-      <Modal open={relModal} onClose={() => setRelModal(false)} title="新增人物关系" onConfirm={saveRel} confirmDisabled={!relForm.fromCharId || !relForm.toCharId}>
+      <Modal open={relModal} onClose={() => setRelModal(false)} title={t("t_12v70ud")} onConfirm={saveRel} confirmDisabled={!relForm.fromCharId || !relForm.toCharId}>
         <div className="grid grid-cols-2 gap-3">
           <div>
             <label className="text-xs text-slate-400 mb-1 block">From</label>
             <select value={relForm.fromCharId} onChange={e => setRelForm({ ...relForm, fromCharId: parseInt(e.target.value) || '' })} className="w-full px-3 py-2 rounded-lg border border-slate-600 bg-slate-900/60 text-slate-50 text-sm">
-              <option value="">选择人物</option>
+              <option value="">{t('t_ikvvu7')}</option>
               {characters.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
             </select>
           </div>
           <div>
             <label className="text-xs text-slate-400 mb-1 block">To</label>
             <select value={relForm.toCharId} onChange={e => setRelForm({ ...relForm, toCharId: parseInt(e.target.value) || '' })} className="w-full px-3 py-2 rounded-lg border border-slate-600 bg-slate-900/60 text-slate-50 text-sm">
-              <option value="">选择人物</option>
+              <option value="">{t('t_ikvvu7')}</option>
               {characters.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
             </select>
           </div>
@@ -173,12 +175,12 @@ export function CharacterPanel({ workId }) {
             {RELATION_TYPES.map(t => <option key={t} value={t}>{t}</option>)}
           </select>
           <div className="flex items-center gap-2">
-            <label className="text-xs text-slate-400">强度</label>
+            <label className="text-xs text-slate-400">{t('t_gpt8')}</label>
             <input type="range" min={1} max={10} value={relForm.strength} onChange={e => setRelForm({ ...relForm, strength: parseInt(e.target.value) })} className="flex-1 accent-sky-500" />
             <span className="text-xs text-slate-400 w-6">{relForm.strength}</span>
           </div>
         </div>
-        <Input value={relForm.description} onChange={e => setRelForm({ ...relForm, description: e.target.value })} placeholder="关系描述（可选）" />
+        <Input value={relForm.description} onChange={e => setRelForm({ ...relForm, description: e.target.value })} placeholder={t("t_ejfs")} />
         <label className="flex items-center gap-2 text-sm text-slate-300 cursor-pointer">
           <input type="checkbox" checked={relForm.bidirectional} onChange={e => setRelForm({ ...relForm, bidirectional: e.target.checked })} className="accent-sky-500" />
           双向关系

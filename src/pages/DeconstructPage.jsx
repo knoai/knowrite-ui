@@ -4,8 +4,10 @@ import { Button } from '../components/ui/Button';
 import { Textarea } from '../components/ui/Input';
 import { useWork } from '../contexts/WorkContext';
 import * as api from '../api/novel';
+import { useI18n } from '../contexts/I18nContext';
 
 export function DeconstructPage() {
+  const { t } = useI18n();
   const { refreshWorks } = useWork();
   const [text, setText] = useState('');
   const [loading, setLoading] = useState(false);
@@ -72,7 +74,7 @@ export function DeconstructPage() {
     <div className="space-y-4">
       <Card>
         <CardHeader>
-          <CardTitle className="text-base">拆书分析</CardTitle>
+          <CardTitle className="text-base">{t('t_csdn6y')}</CardTitle>
           <p className="text-xs text-slate-500 mt-1">
             粘贴或上传一本小说，AI 将自动分析其情节结构、角色设定、文风指纹、世界观规则和节奏模式，生成可复用的创作模板。
           </p>
@@ -86,13 +88,13 @@ export function DeconstructPage() {
                 📄 上传文件
               </span>
             </label>
-            <span className="text-xs text-slate-500">支持 .txt / .md，建议 3-30 万字</span>
+            <span className="text-xs text-slate-500">{t('_txt_md__3_30_')}</span>
           </div>
 
           <Textarea
             value={text}
             onChange={(e) => setText(e.target.value)}
-            placeholder="在此粘贴小说正文..."
+            placeholder={t("t_1nij8yb")}
             rows={10}
             className="text-sm font-mono"
           />
@@ -127,7 +129,7 @@ export function DeconstructPage() {
       {result && (
         <Card>
           <CardHeader>
-            <CardTitle className="text-base">分析结果</CardTitle>
+            <CardTitle className="text-base">{t('t_as7ylv')}</CardTitle>
           </CardHeader>
           <div className="px-4 pb-4 space-y-3">
             {renderSection('情节结构', result.plotStructure)}
@@ -137,13 +139,13 @@ export function DeconstructPage() {
             {renderSection('节奏模式', result.pacingPatterns)}
             {result.artifacts && (
               <div className="bg-emerald-500/10 border border-emerald-500/20 rounded-lg p-4">
-                <h3 className="text-sm font-semibold text-emerald-400 mb-2">可复用资源</h3>
+                <h3 className="text-sm font-semibold text-emerald-400 mb-2">{t('t_f8y5ze')}</h3>
                 <div className="space-y-2 text-sm text-slate-300">
                   {result.artifacts.template && (
-                    <div>✅ 故事模板已生成: <span className="text-emerald-300">{result.artifacts.template.name}</span></div>
+                    <div>{t('t_kgk1')}<span className="text-emerald-300">{result.artifacts.template.name}</span></div>
                   )}
                   {result.artifacts.style && (
-                    <div>✅ 作者声纹已提取: <span className="text-emerald-300">{result.artifacts.style.name}</span></div>
+                    <div>{t('t_e78p')}<span className="text-emerald-300">{result.artifacts.style.name}</span></div>
                   )}
                   {result.artifacts.prompts && (
                     <div>✅ 提示词模板已创建: <span className="text-emerald-300">{result.artifacts.prompts.length} 个</span></div>
@@ -159,7 +161,7 @@ export function DeconstructPage() {
       {history.length > 0 && (
         <Card>
           <CardHeader>
-            <CardTitle className="text-base">历史记录</CardTitle>
+            <CardTitle className="text-base">{t('t_aw7utt')}</CardTitle>
           </CardHeader>
           <div className="px-4 pb-4">
             <div className="space-y-2">
@@ -170,7 +172,7 @@ export function DeconstructPage() {
                   onClick={() => setResult(h.result)}
                 >
                   <div>
-                    <div className="text-sm text-slate-200">{h.title || '未命名分析'}</div>
+                    <div className="text-sm text-slate-200">{t('t_bt1jz0')}</div>
                     <div className="text-xs text-slate-500">{new Date(h.createdAt).toLocaleString()}</div>
                   </div>
                   <div className="text-xs text-slate-500">

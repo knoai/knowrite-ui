@@ -1,13 +1,15 @@
 import { Badge } from './ui/Badge';
 import { BookOpen, ArrowRight, Trash2 } from 'lucide-react';
+import { useI18n } from '../contexts/I18nContext';
 
 export function WorkCard({ work, onClick, onDelete }) {
+  const { t } = useI18n();
   let strategyLabel = 'Single';
   let variant = 'default';
-  if (work.strategy === 'knowrite') { strategyLabel = '多Agent'; variant = 'info'; }
+  if (work.strategy === 'knowrite') { strategyLabel = t('strategy_multi_agent'); variant = 'info'; }
   else if (work.strategy === 'pipeline') { strategyLabel = 'Pipeline'; variant = 'primary'; }
   else if (work.strategy && (work.strategy.includes('multivolume') || work.strategy === 'mv')) {
-    strategyLabel = '多卷' + (work.strategy.includes('knowrite') ? '·多Agent' : '');
+    strategyLabel = t('strategy_multivolume') + (work.strategy.includes('knowrite') ? t('strategy_multivolume_suffix') : '');
     variant = 'info';
   }
 
@@ -25,15 +27,15 @@ export function WorkCard({ work, onClick, onDelete }) {
       </div>
       <div className="flex-1 min-w-0">
         <div className="text-[15px] font-semibold text-slate-100 truncate mb-1 group-hover:text-sky-400 transition">
-          {work.title ? `《${work.title}》` : '未命名作品'}
+          {work.title ? `《${work.title}》` : t('msg_untitled_work')}
         </div>
         <div className="text-slate-500 text-xs line-clamp-2 mb-2.5 leading-relaxed">
-          {work.desc || work.rawTopic || '暂无描述'}
+          {work.desc || work.rawTopic || t('msg_no_description')}
         </div>
         <div className="flex flex-wrap items-center gap-1.5">
-          <Badge variant="default" size="sm">{work.style || '默认'}</Badge>
+          <Badge variant="default" size="sm">{work.style || t('label_default')}</Badge>
           <Badge variant={variant} size="sm">{strategyLabel}</Badge>
-          <Badge variant="purple" size="sm">{work.chapterCount || 0} 章</Badge>
+          <Badge variant="purple" size="sm">{work.chapterCount || 0} {t('label_chapter_unit')}</Badge>
           {timeStr && <span className="text-[10px] text-slate-600 ml-1">{timeStr}</span>}
         </div>
       </div>
@@ -44,7 +46,7 @@ export function WorkCard({ work, onClick, onDelete }) {
         <button
           onClick={(e) => { e.stopPropagation(); onDelete(work.workId); }}
           className="self-center p-1.5 rounded-lg text-slate-500 hover:text-red-400 hover:bg-red-500/10 transition opacity-0 group-hover:opacity-100"
-          title="删除作品"
+          title={t('btn_delete_work')}
         >
           <Trash2 size={16} />
         </button>

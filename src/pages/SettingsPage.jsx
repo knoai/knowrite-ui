@@ -4,8 +4,12 @@ import { Button } from '../components/ui/Button';
 import { Input } from '../components/ui/Input';
 import { Textarea } from '../components/ui/Input';
 import * as api from '../api/novel';
+import { useI18n } from '../contexts/I18nContext';
+import { useI18n } from '../contexts/I18nContext';
 
 export function SettingsPage() {
+  const { t } = useI18n();
+  const { t } = useI18n();
   const [settings, setSettings] = useState(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -30,9 +34,9 @@ export function SettingsPage() {
     setStatus('');
     try {
       await api.saveEnginePipeline(pipeline);
-      setStatus('流水线配置保存成功');
+      setStatus(t('msg_pipeline_saved'));
     } catch (e) {
-      setStatus('流水线配置保存失败: ' + e.message);
+      setStatus(t('err_pipeline_save') + e.message);
     }
   };
 
@@ -42,9 +46,9 @@ export function SettingsPage() {
     setStatus('');
     try {
       await api.saveSettings(settings);
-      setStatus('保存成功');
+      setStatus(t('msg_save_success'));
     } catch (e) {
-      setStatus('保存失败: ' + e.message);
+      setStatus(t('err_save') + e.message);
     } finally {
       setSaving(false);
     }
@@ -54,9 +58,9 @@ export function SettingsPage() {
     setStatus('');
     try {
       await api.saveModelLibrary(modelLibrary);
-      setStatus('模型库保存成功');
+      setStatus(t('msg_model_lib_saved'));
     } catch (e) {
-      setStatus('模型库保存失败: ' + e.message);
+      setStatus(t('err_model_lib_save') + e.message);
     }
   };
 
@@ -94,7 +98,7 @@ export function SettingsPage() {
   const addProvider = () => {
     const key = `provider${Object.keys(getModelCfg().providers || {}).length + 1}`;
     setModelCfg((mc) => {
-      const providers = { ...mc.providers, [key]: { enabled: true, alias: '新Provider', apiKey: '', baseURL: '', models: [] } };
+      const providers = { ...mc.providers, [key]: { enabled: true, alias: t('label_new_provider'), apiKey: '', baseURL: '', models: [] } };
       return { ...mc, providers };
     });
   };
@@ -160,7 +164,7 @@ export function SettingsPage() {
       low.forEach((r) => { if (roles[r]) roles[r] = { ...roles[r], temperature: 0 }; });
       return { ...mc, roleDefaults: roles };
     });
-    setStatus('已应用最佳实践温度');
+    setStatus(t('msg_temp_applied'));
   };
 
   // ---- agentModels helpers ----
@@ -188,11 +192,11 @@ export function SettingsPage() {
       });
       return { ...mc, agentModels: am };
     });
-    setStatus('已从角色默认值同步到 Agent 模型');
+    setStatus(t('msg_synced_agent'));
   };
   const clearAgentModels = () => {
     setModelCfg((mc) => ({ ...mc, agentModels: {} }));
-    setStatus('已清空 Agent 模型配置');
+    setStatus(t('msg_cleared_agent'));
   };
 
   const updateWriterRotation = (field, value) => {
@@ -211,7 +215,7 @@ export function SettingsPage() {
   const addRotationItem = () => {
     setModelCfg((mc) => {
       const list = [...(mc.writerRotation?.models || [])];
-      list.push({ provider: '', model: '', temperature: 0.85, alias: `作家${list.length + 1}` });
+      list.push({ provider: '', model: '', temperature: 0.85, alias: t('label_writer') + (list.length + 1) });
       return { ...mc, writerRotation: { ...mc.writerRotation, models: list } };
     });
   };
@@ -233,7 +237,7 @@ export function SettingsPage() {
   }, []);
 
   const handleSwitchProvider = async (provider) => {
-    setStatus(`正在切换到 ${provider}...`);
+    setStatus(t('status_switching_to') + provider + '...');
     try {
       const options = {};
       options.roles = switchSelectedRoles;
@@ -247,10 +251,10 @@ export function SettingsPage() {
       await api.switchProvider(provider, options);
       const cfg = await api.getModelConfig();
       setSettings((prev) => ({ ...prev, modelConfig: cfg }));
-      setStatus(`已切换到 ${provider}（${switchSelectedRoles.length} 个角色）`);
+      setStatus(t('status_switched_to') + provider + ' (' + switchSelectedRoles.length + t('unit_roles') + ')');
       setSwitchPanel(null);
     } catch (err) {
-      setStatus('切换失败: ' + err.message);
+      setStatus(t('err_switch') + err.message);
     }
   };
 
@@ -289,35 +293,35 @@ export function SettingsPage() {
     return (
       <div className="flex items-center gap-2 text-slate-400 text-sm py-8">
         <span className="inline-block w-4 h-4 border-2 border-slate-600 border-t-sky-400 rounded-full animate-spin" />
-        加载配置中...
+        {t('status_loading_config')}
       </div>
     );
   }
 
   if (!settings) {
-    return <div className="text-slate-400 text-sm">配置加载失败</div>;
+    return <div className="text-slate-400 text-sm">{t('t_86svzm')}</div>;
   }
 
   const tabs = [
-    { key: 'skill', label: '写作技能 (Skill)' },
-    { key: 'review', label: '评审维度' },
-    { key: 'author', label: '作者风格' },
-    { key: 'platform', label: '平台风格' },
-    { key: 'chapter', label: '章节配置' },
-    { key: 'writing', label: '写作风格' },
-    { key: 'models', label: '模型配置' },
-    { key: 'pipeline', label: '流水线' },
+    { key: 'skill', label: t('tab_skill') },
+    { key: 'review', label: t('tab_review') },
+    { key: 'author', label: t('tab_author') },
+    { key: 'platform', label: t('tab_platform') },
+    { key: 'chapter', label: t('tab_chapter') },
+    { key: 'writing', label: t('tab_writing') },
+    { key: 'models', label: t('tab_models') },
+    { key: 'pipeline', label: t('tab_pipeline') },
   ];
 
   const presetOptions = [
-    { value: '8', label: '精简版 · 8维度' },
-    { value: '15', label: '标准版 · 15维度' },
-    { value: '33', label: '完整版 · 33维度' },
+    { value: '8', label: t('preset_8') },
+    { value: '15', label: t('preset_15') },
+    { value: '33', label: t('preset_33') },
   ];
 
   const handlePresetChange = async (e) => {
     const preset = e.target.value;
-    setStatus('切换预设中...');
+    setStatus(t('status_switching_preset'));
     try {
       const result = await api.setReviewPreset(preset);
       setSettings((prev) => ({
@@ -326,34 +330,34 @@ export function SettingsPage() {
         reviewDimensions: result.reviewDimensions,
         skill: result.skill,
       }));
-      setStatus(`已切换为 ${presetOptions.find((o) => o.value === preset)?.label}`);
+      setStatus(t('status_switched_to') + presetOptions.find((o) => o.value === preset)?.label);
     } catch (err) {
-      setStatus('切换失败: ' + err.message);
+      setStatus(t('err_switch') + err.message);
     }
   };
 
   const providerKeys = Object.keys(getModelCfg().providers || {});
   const roleEntries = Object.entries(getModelCfg().roleDefaults || {});
   const ROLE_LABELS = {
-    writer: '作者（初稿）',
-    editor: '编辑（改稿）',
-    humanizer: '去AI化',
-    proofreader: '校编',
-    polish: '润色',
-    reader: '读者反馈',
-    summarizer: '摘要生成',
-    outline: '大纲生成',
-    planner: '策划评审',
-    reviewer: '通用评审',
-    product: '产品评审',
-    tech: '技术架构评审',
-    reviser: '评审后修改',
-    synthesis: '综合评审',
-    repetitionRepair: '重复修复',
-    deviationCheck: '偏离检测',
-    styleCorrect: '风格修正',
-    promptEvolve: 'Prompt进化',
-    fitnessEvaluate: 'Fitness评估',
+    writer: t('role_writer'),
+    editor: t('role_editor'),
+    humanizer: t('role_humanizer'),
+    proofreader: t('role_proofreader'),
+    polish: t('role_polish'),
+    reader: t('role_reader'),
+    summarizer: t('role_summarizer'),
+    outline: t('role_outline'),
+    planner: t('role_planner'),
+    reviewer: t('role_reviewer'),
+    product: t('role_product'),
+    tech: t('role_tech'),
+    reviser: t('role_reviser'),
+    synthesis: t('role_synthesis'),
+    repetitionRepair: t('role_repetition_repair'),
+    deviationCheck: t('role_deviation_check'),
+    styleCorrect: t('role_style_correct'),
+    promptEvolve: t('role_prompt_evolve'),
+    fitnessEvaluate: t('role_fitness_evaluate'),
   };
 
   const ALL_ROLES = Object.keys(ROLE_LABELS);
@@ -386,8 +390,8 @@ export function SettingsPage() {
     <div className="space-y-4">
       <Card>
         <CardHeader>
-          <CardTitle className="mb-0">创作设置</CardTitle>
-          <Button variant="primary" size="sm" onClick={handleSave} disabled={saving}>保存设置</Button>
+          <CardTitle className="mb-0">{t('t_ap42q9')}</CardTitle>
+          <Button variant="primary" size="sm" onClick={handleSave} disabled={saving}>{t('t_agor7v')}</Button>
         </CardHeader>
         {status && <div className={`text-sm mb-3 ${status.includes('失败') ? 'text-red-400' : 'text-green-400'}`}>{status}</div>}
 
@@ -409,7 +413,7 @@ export function SettingsPage() {
         {activeTab === 'skill' && (
           <div className="space-y-3">
             <div className="flex items-center gap-3">
-              <label className="text-sm text-slate-300">当前评审预设</label>
+              <label className="text-sm text-slate-300">{t('t_vu3lf5')}</label>
               <select
                 value={settings.reviewPreset || '33'}
                 onChange={handlePresetChange}
@@ -420,11 +424,9 @@ export function SettingsPage() {
                 ))}
               </select>
             </div>
-            <div className="text-xs text-slate-500">
-              Skill 规则与评审维度联动，切换预设会自动替换为对应版本的写作规范。
-            </div>
-            <label className="block text-sm text-slate-300 mb-2">核心写作规则 (core-rules)</label>
-            <p className="text-xs text-slate-500 mb-2">该内容会被注入到所有作者模型的 Prompt 中，作为硬性创作规范。</p>
+            <div className="text-xs text-slate-500">{t('desc_skill_preset')}</div>
+            <label className="block text-sm text-slate-300 mb-2">{t('_core_rules')}</label>
+            <p className="text-xs text-slate-500 mb-2">{t('t_edas')}</p>
             <Textarea value={settings.skill || ''} onChange={(e) => setSettings({ ...settings, skill: e.target.value })} rows={12} />
           </div>
         )}
@@ -432,7 +434,7 @@ export function SettingsPage() {
         {activeTab === 'review' && (
           <div className="space-y-3">
             <div className="flex items-center gap-3">
-              <label className="text-sm text-slate-300">当前评审预设</label>
+              <label className="text-sm text-slate-300">{t('t_vu3lf5')}</label>
               <select
                 value={settings.reviewPreset || '33'}
                 onChange={handlePresetChange}
@@ -443,22 +445,20 @@ export function SettingsPage() {
                 ))}
               </select>
             </div>
-            <div className="text-xs text-slate-500">
-              切换预设会替换为对应版本的评审维度。你可以在此基础上继续编辑，保存后会覆盖该预设的自定义内容。
-            </div>
+            <div className="text-xs text-slate-500">{t('desc_preset_switch')}</div>
             <div className="flex items-center justify-between pt-2">
-              <label className="block text-sm text-slate-300">编辑评审维度</label>
-              <Button size="sm" onClick={() => addItem('reviewDimensions', { name: '新维度', description: '描述' })}>添加维度</Button>
+              <label className="block text-sm text-slate-300">{t('t_1ehzpm')}</label>
+              <Button size="sm" onClick={() => addItem('reviewDimensions', { name: '新维度', description: '描述' })}>{t('t_e83g8n')}</Button>
             </div>
             <div className="space-y-2">
               {settings.reviewDimensions?.map((dim, i) => (
                 <div key={i} className="grid grid-cols-1 sm:grid-cols-3 gap-2 items-start p-3 bg-slate-900/40 border border-slate-700/40 rounded-lg">
                   <div className="sm:col-span-1">
-                    <Input value={dim.name} onChange={(e) => updateList('reviewDimensions', i, 'name', e.target.value)} placeholder="维度名称" />
+                    <Input value={dim.name} onChange={(e) => updateList('reviewDimensions', i, 'name', e.target.value)} placeholder={t("t_geq3at")} />
                   </div>
                   <div className="sm:col-span-2 flex gap-2">
-                    <Input value={dim.description} onChange={(e) => updateList('reviewDimensions', i, 'description', e.target.value)} placeholder="评审描述" />
-                    <Button variant="danger" size="sm" onClick={() => removeItem('reviewDimensions', i)}>删除</Button>
+                    <Input value={dim.description} onChange={(e) => updateList('reviewDimensions', i, 'description', e.target.value)} placeholder={t("t_i0jbxa")} />
+                    <Button variant="danger" size="sm" onClick={() => removeItem('reviewDimensions', i)}>{t('t_eslg')}</Button>
                   </div>
                 </div>
               ))}
@@ -469,18 +469,18 @@ export function SettingsPage() {
         {activeTab === 'author' && (
           <div className="space-y-3">
             <div className="flex items-center justify-between">
-              <label className="block text-sm text-slate-300">作者风格预设</label>
-              <Button size="sm" onClick={() => addItem('authorStyles', { name: '新风格', description: '' })}>添加风格</Button>
+              <label className="block text-sm text-slate-300">{t('t_1gz5h5d')}</label>
+              <Button size="sm" onClick={() => addItem('authorStyles', { name: '新风格', description: '' })}>{t('t_e87wfn')}</Button>
             </div>
             <div className="space-y-2">
               {settings.authorStyles?.map((s, i) => (
                 <div key={i} className="grid grid-cols-1 sm:grid-cols-3 gap-2 items-start p-3 bg-slate-900/40 border border-slate-700/40 rounded-lg">
                   <div className="sm:col-span-1">
-                    <Input value={s.name} onChange={(e) => updateList('authorStyles', i, 'name', e.target.value)} placeholder="风格名称" />
+                    <Input value={s.name} onChange={(e) => updateList('authorStyles', i, 'name', e.target.value)} placeholder={t("t_jpie5t")} />
                   </div>
                   <div className="sm:col-span-2 flex gap-2">
-                    <Input value={s.description} onChange={(e) => updateList('authorStyles', i, 'description', e.target.value)} placeholder="风格展开描述，会注入到 Prompt 中" />
-                    <Button variant="danger" size="sm" onClick={() => removeItem('authorStyles', i)}>删除</Button>
+                    <Input value={s.description} onChange={(e) => updateList('authorStyles', i, 'description', e.target.value)} placeholder={t("__prompt_")} />
+                    <Button variant="danger" size="sm" onClick={() => removeItem('authorStyles', i)}>{t('t_eslg')}</Button>
                   </div>
                 </div>
               ))}
@@ -491,18 +491,18 @@ export function SettingsPage() {
         {activeTab === 'platform' && (
           <div className="space-y-3">
             <div className="flex items-center justify-between">
-              <label className="block text-sm text-slate-300">平台风格预设</label>
-              <Button size="sm" onClick={() => addItem('platformStyles', { name: '新平台', description: '' })}>添加平台</Button>
+              <label className="block text-sm text-slate-300">{t('t_23xo0qt')}</label>
+              <Button size="sm" onClick={() => addItem('platformStyles', { name: '新平台', description: '' })}>{t('t_e7xv36')}</Button>
             </div>
             <div className="space-y-2">
               {settings.platformStyles?.map((s, i) => (
                 <div key={i} className="grid grid-cols-1 sm:grid-cols-3 gap-2 items-start p-3 bg-slate-900/40 border border-slate-700/40 rounded-lg">
                   <div className="sm:col-span-1">
-                    <Input value={s.name} onChange={(e) => updateList('platformStyles', i, 'name', e.target.value)} placeholder="平台名称" />
+                    <Input value={s.name} onChange={(e) => updateList('platformStyles', i, 'name', e.target.value)} placeholder={t("t_c9kg80")} />
                   </div>
                   <div className="sm:col-span-2 flex gap-2">
-                    <Input value={s.description} onChange={(e) => updateList('platformStyles', i, 'description', e.target.value)} placeholder="平台风格展开描述" />
-                    <Button variant="danger" size="sm" onClick={() => removeItem('platformStyles', i)}>删除</Button>
+                    <Input value={s.description} onChange={(e) => updateList('platformStyles', i, 'description', e.target.value)} placeholder={t("t_2g9bobb")} />
+                    <Button variant="danger" size="sm" onClick={() => removeItem('platformStyles', i)}>{t('t_eslg')}</Button>
                   </div>
                 </div>
               ))}
@@ -513,8 +513,8 @@ export function SettingsPage() {
         {activeTab === 'writing' && (
           <div className="space-y-5">
             <div>
-              <CardTitle className="mb-3">写作风格模式</CardTitle>
-              <p className="text-xs text-slate-500 mb-4">选择系统默认的写作模式。创建作品时可单独覆盖。</p>
+              <CardTitle className="mb-3">{t('t_81ufa9')}</CardTitle>
+              <p className="text-xs text-slate-500 mb-4">{t('t_amn67l')}</p>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <label className={`cursor-pointer rounded-lg border p-4 transition ${settings.writingMode === 'industrial' ? 'border-sky-500 bg-sky-500/10' : 'border-slate-700/40 hover:border-slate-600'}`}>
                   <input
@@ -525,13 +525,13 @@ export function SettingsPage() {
                     onChange={() => setSettings({ ...settings, writingMode: 'industrial' })}
                     className="sr-only"
                   />
-                  <div className="font-medium text-slate-200 mb-1">工业风 · 严格量产</div>
+                  <div className="font-medium text-slate-200 mb-1">{t('t_aasjhr')}</div>
                   <div className="text-xs text-slate-400 space-y-1">
-                    <p>• 8条核心规则严格执行</p>
-                    <p>• 大纲必须严格遵循</p>
-                    <p>• 编辑最多3轮严格评审</p>
-                    <p>• 重度去AI化 + 全量ReAct评审</p>
-                    <p>• 适合：商业化量产、IP开发</p>
+                    <p>• {t('industrial_rule_1')}</p>
+                    <p>{t('t_fuy3')}</p>
+                    <p>{t('t_mekb')}</p>
+                    <p>{t('_ai__react')}</p>
+                    <p>{t('___ip')}</p>
                   </div>
                 </label>
                 <label className={`cursor-pointer rounded-lg border p-4 transition ${settings.writingMode === 'free' ? 'border-sky-500 bg-sky-500/10' : 'border-slate-700/40 hover:border-slate-600'}`}>
@@ -543,13 +543,13 @@ export function SettingsPage() {
                     onChange={() => setSettings({ ...settings, writingMode: 'free' })}
                     className="sr-only"
                   />
-                  <div className="font-medium text-slate-200 mb-1">自由风 · 创意探索</div>
+                  <div className="font-medium text-slate-200 mb-1">{t('t_arikgk')}</div>
                   <div className="text-xs text-slate-400 space-y-1">
-                    <p>• 只保留2条底线（吸引力+人物一致性）</p>
-                    <p>• 大纲为参考，允许偏离和即兴</p>
-                    <p>• 编辑1轮轻量检查</p>
-                    <p>• 轻度去AI化，跳过proofreader</p>
-                    <p>• 适合：灵感驱动、探索性写作</p>
+                    <p>{t('_2_')}</p>
+                    <p>{t('t_fuy3')}</p>
+                    <p>{t('_1')}</p>
+                    <p>{t('_ai_proofreader')}</p>
+                    <p>{t('t_ebc3')}</p>
                   </div>
                 </label>
               </div>
@@ -562,27 +562,27 @@ export function SettingsPage() {
             {/* ===== 模型库管理 ===== */}
             <div className="p-4 bg-slate-900/40 border border-slate-700/40 rounded-lg space-y-3">
               <div className="flex items-center justify-between">
-                <h3 className="text-sm font-medium text-slate-200">模型库</h3>
+                <h3 className="text-sm font-medium text-slate-200">{t('t_fz0w9')}</h3>
                 <div className="flex gap-2">
-                  <Button size="sm" variant="secondary" onClick={handleSaveModelLibrary}>保存模型库</Button>
-                  <Button size="sm" onClick={() => { setEditingLibIndex(-1); setLibForm({ key: '', name: '', url: '', modelsText: '' }); }}>添加模型库</Button>
+                  <Button size="sm" variant="secondary" onClick={handleSaveModelLibrary}>{t('t_uxccdu')}</Button>
+                  <Button size="sm" onClick={() => { setEditingLibIndex(-1); setLibForm({ key: '', name: '', url: '', modelsText: '' }); }}>{t('t_ep85r8')}</Button>
                 </div>
               </div>
               <div className="text-xs text-slate-500">
-                模型库是全局 Provider 模板，添加 Provider 时可从中选择自动填充。修改后请点「保存模型库」。
+                模型库是全局 Provider 模板，{t('btn_add_provider')} 时可从中选择自动填充。修改后请点「{t('btn_save_model_lib')}」。
               </div>
 
               {editingLibIndex !== null && (
                 <div className="p-3 bg-slate-900/60 border border-slate-700/40 rounded-lg space-y-2">
                   <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
-                    <Input value={libForm.key} onChange={(e) => setLibForm({ ...libForm, key: e.target.value })} placeholder="Key (唯一标识)" />
-                    <Input value={libForm.name} onChange={(e) => setLibForm({ ...libForm, name: e.target.value })} placeholder="显示名称" />
-                    <Input value={libForm.url} onChange={(e) => setLibForm({ ...libForm, url: e.target.value })} placeholder="Base URL" />
+                    <Input value={libForm.key} onChange={(e) => setLibForm({ ...libForm, key: e.target.value })} placeholder={t("key_")} />
+                    <Input value={libForm.name} onChange={(e) => setLibForm({ ...libForm, name: e.target.value })} placeholder={t("t_deexj3")} />
+                    <Input value={libForm.url} onChange={(e) => setLibForm({ ...libForm, url: e.target.value })} placeholder={t('ph_base_url')} />
                   </div>
                   <Textarea
                     value={libForm.modelsText}
                     onChange={(e) => setLibForm({ ...libForm, modelsText: e.target.value })}
-                    placeholder="模型列表，每行一个，格式：id|名称（如 qwen-plus|Qwen-Plus）"
+                    placeholder={t("___id__qwen_plusqwen_plus")}
                     rows={3}
                   />
                   <div className="flex gap-2">
@@ -598,9 +598,9 @@ export function SettingsPage() {
                       setModelLibrary(next);
                       setEditingLibIndex(null);
                     }}>
-                      {editingLibIndex >= 0 ? '更新' : '添加'}
+                      {editingLibIndex >= 0 ? t('btn_update') : t('btn_add')}
                     </Button>
-                    <Button size="sm" variant="secondary" onClick={() => setEditingLibIndex(null)}>取消</Button>
+                    <Button size="sm" variant="secondary" onClick={() => setEditingLibIndex(null)}>{t('t_ev02')}</Button>
                   </div>
                 </div>
               )}
@@ -609,11 +609,11 @@ export function SettingsPage() {
                 <table className="min-w-full text-sm border border-slate-700/40 rounded-lg">
                   <thead className="bg-slate-900/60 text-slate-300">
                     <tr>
-                      <th className="text-left px-3 py-2 font-medium">名称</th>
+                      <th className="text-left px-3 py-2 font-medium">{t('t_eyrn')}</th>
                       <th className="text-left px-3 py-2 font-medium">Key</th>
                       <th className="text-left px-3 py-2 font-medium">URL</th>
-                      <th className="text-left px-3 py-2 font-medium">模型数</th>
-                      <th className="text-left px-3 py-2 font-medium w-24">操作</th>
+                      <th className="text-left px-3 py-2 font-medium">{t('t_fz292')}</th>
+                      <th className="text-left px-3 py-2 font-medium w-24">{t('t_hkxb')}</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-slate-700/40">
@@ -633,19 +633,19 @@ export function SettingsPage() {
                                 url: lib.url || '',
                                 modelsText: (lib.models || []).join('\n'),
                               });
-                            }}>编辑</button>
+                            }}>{t('t_mekb')}</button>
                             <button className="text-xs text-slate-500 hover:text-red-400" onClick={() => {
                               const next = [...modelLibrary];
                               next.splice(idx, 1);
                               setModelLibrary(next);
-                            }}>删除</button>
+                            }}>{t('t_eslg')}</button>
                           </div>
                         </td>
                       </tr>
                     ))}
                     {modelLibrary.length === 0 && (
                       <tr>
-                        <td colSpan={5} className="px-3 py-4 text-xs text-slate-500 text-center">模型库为空，点击「添加模型库」开始配置。</td>
+                        <td colSpan={5} className="px-3 py-4 text-xs text-slate-500 text-center">{t('t_ep85r8')}</td>
                       </tr>
                     )}
                   </tbody>
@@ -656,8 +656,8 @@ export function SettingsPage() {
             {/* ===== Provider 配置 ===== */}
             <div className="p-4 bg-slate-900/40 border border-slate-700/40 rounded-lg space-y-3">
               <div className="flex items-center justify-between">
-                <h3 className="text-sm font-medium text-slate-200">Provider 配置</h3>
-                <Button size="sm" onClick={addProvider}>添加 Provider</Button>
+                <h3 className="text-sm font-medium text-slate-200">{t('provider_')}</h3>
+                <Button size="sm" onClick={addProvider}>{t('_provider')}</Button>
               </div>
 
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
@@ -676,12 +676,12 @@ export function SettingsPage() {
                           <Input
                             value={p.alias || ''}
                             onChange={(e) => updateProvider(pk, 'alias', e.target.value)}
-                            placeholder="显示名称"
+                            placeholder={t("t_deexj3")}
                             className="w-28 text-sm py-0.5"
                           />
                           <span className="text-xs text-slate-500">({pk})</span>
                         </div>
-                        <Button variant="danger" size="sm" onClick={() => removeProvider(pk)}>删除</Button>
+                        <Button variant="danger" size="sm" onClick={() => removeProvider(pk)}>{t('t_eslg')}</Button>
                       </div>
                       <div className="grid grid-cols-1 gap-2">
                         <div className="flex gap-2">
@@ -700,37 +700,37 @@ export function SettingsPage() {
                               e.target.value = '';
                             }}
                           >
-                            <option value="">从模型库选择…</option>
+                            <option value="">{t('t_daba7p')}</option>
                             {modelLibrary.map((lib) => (
                               <option key={lib.key} value={lib.key}>{lib.name}</option>
                             ))}
-                            <option value="__custom__">自定义</option>
+                            <option value="__custom__">{t('t_jh1ll')}</option>
                           </select>
                         </div>
-                        <Input value={p.baseURL || ''} onChange={(e) => updateProvider(pk, 'baseURL', e.target.value)} placeholder="Base URL" />
+                        <Input value={p.baseURL || ''} onChange={(e) => updateProvider(pk, 'baseURL', e.target.value)} placeholder={t('ph_base_url')} />
                         <div className="flex gap-2">
-                          <Input type="password" value={p.apiKey || ''} onChange={(e) => updateProvider(pk, 'apiKey', e.target.value)} placeholder="API Key（本地模型可留空）" className="flex-1" />
+                          <Input type="password" value={p.apiKey || ''} onChange={(e) => updateProvider(pk, 'apiKey', e.target.value)} placeholder={t("api_key_")} className="flex-1" />
                           <Button size="sm" onClick={() => handleTestProvider(pk)} disabled={testStatus[pk]?.type === 'loading'}>
-                            {testStatus[pk]?.type === 'loading' ? '测试中...' : '测试'}
+                            {testStatus[pk]?.type === 'loading' ? t('status_testing') : t('btn_test')}
                           </Button>
                         </div>
                       </div>
                       {testStatus[pk]?.type === 'success' && (
-                        <div className="text-xs text-green-400">✅ 测试成功：{testStatus[pk].msg}</div>
+                        <div className="text-xs text-green-400">{t('t_jcve')}</div>
                       )}
                       {testStatus[pk]?.type === 'error' && (
-                        <div className="text-xs text-red-400">❌ 测试失败：{testStatus[pk].msg}</div>
+                        <div className="text-xs text-red-400">{t('t_fy1g')}</div>
                       )}
 
                       {/* 默认模型 */}
                       <div className="flex items-center gap-2">
-                        <span className="text-xs text-slate-400">默认模型</span>
+                        <span className="text-xs text-slate-400">{t('t_km7tcm')}</span>
                         <select
                           className="bg-slate-900 border border-slate-700 text-slate-200 text-xs rounded px-2 py-1 flex-1"
                           value={p.defaultModel || ''}
                           onChange={(e) => updateProvider(pk, 'defaultModel', e.target.value)}
                         >
-                          <option value="">使用第一个可用模型</option>
+                          <option value="">{t('t_673j0w')}</option>
                           {(p.models || []).map((m) => (
                             <option key={m} value={m}>{m}</option>
                           ))}
@@ -739,7 +739,7 @@ export function SettingsPage() {
 
                       {/* 可用模型 */}
                       <div className="space-y-2">
-                        <div className="text-xs text-slate-400">可用模型 ({(p.models || []).length})</div>
+                        <div className="text-xs text-slate-400">{t('t_ij62')}</div>
                         <div className="flex flex-wrap gap-1">
                           {(p.models || []).map((m, idx) => (
                             <span key={idx} className="text-xs bg-slate-800 border border-slate-700 rounded px-2 py-0.5 text-slate-300 flex items-center gap-1">
@@ -758,7 +758,7 @@ export function SettingsPage() {
                         <div className="flex gap-2">
                           <Input
                             id={`add-model-${pk}`}
-                            placeholder="输入模型 ID（如 qwen3:4b）"
+                            placeholder={t("_id__qwen34b")}
                             className="text-xs flex-1"
                             onKeyDown={(e) => {
                               if (e.key === 'Enter') {
@@ -792,40 +792,40 @@ export function SettingsPage() {
                 })}
               </div>
               {providerKeys.length === 0 && (
-                <div className="text-xs text-slate-500 text-center py-4">暂无 Provider，点击「添加 Provider」开始配置。可从上方模型库快速选择。</div>
+                <div className="text-xs text-slate-500 text-center py-4">{t('_provider__provider_')}</div>
               )}
             </div>
 
             {/* ===== 默认 Provider ===== */}
             <div className="p-4 bg-slate-900/40 border border-slate-700/40 rounded-lg space-y-3">
-              <h3 className="text-sm font-medium text-slate-200">默认 Provider</h3>
+              <h3 className="text-sm font-medium text-slate-200">{t('t_rs98')}</h3>
               <div className="flex items-center gap-3">
                 <select
                   className="bg-slate-900 border border-slate-700 text-slate-200 text-sm rounded px-2 py-1.5"
                   value={getModelCfg().defaultProvider || ''}
                   onChange={(e) => setModelCfg((mc) => ({ ...mc, defaultProvider: e.target.value }))}
                 >
-                  <option value="">-- 未设置 --</option>
+                  <option value="">{t('t_7e1st6')}</option>
                   {providerKeys.filter((pk) => getModelCfg().providers[pk]?.enabled).map((pk) => (
                     <option key={pk} value={pk}>{getModelCfg().providers[pk].alias || pk}</option>
                   ))}
                 </select>
-                <span className="text-xs text-slate-500">角色未指定 Provider 时将使用默认 Provider</span>
+                <span className="text-xs text-slate-500">{t('_provider__provider')}</span>
               </div>
             </div>
 
             {/* ===== 角色默认模型与温度 ===== */}
             <div className="p-4 bg-slate-900/40 border border-slate-700/40 rounded-lg space-y-3">
               <div className="flex items-center justify-between">
-                <h3 className="text-sm font-medium text-slate-200">角色默认模型与温度</h3>
+                <h3 className="text-sm font-medium text-slate-200">{t('t_282azm3')}</h3>
                 <div className="flex gap-2 flex-wrap">
-                  <Button size="sm" variant="secondary" onClick={applyBestPracticeTemperatures}>应用最佳实践温度</Button>
+                  <Button size="sm" variant="secondary" onClick={applyBestPracticeTemperatures}>{t('t_30tw5x7')}</Button>
                 </div>
               </div>
 
               {/* 批量操作栏 */}
               <div className="p-3 bg-slate-900/60 border border-slate-700/40 rounded-lg space-y-2">
-                <div className="text-xs text-slate-400">批量设置（勾选下方角色后应用）</div>
+                <div className="text-xs text-slate-400">{t('t_o5pc')}</div>
                 <div className="flex flex-wrap gap-2 items-center">
                   <select
                     className="bg-slate-900 border border-slate-700 text-slate-200 text-sm rounded px-2 py-1"
@@ -878,7 +878,7 @@ export function SettingsPage() {
                       setSelectedRoles([]);
                     }}
                   >
-                    应用到 {selectedRoles.length} 个角色
+                    {t('btn_apply_to')}{selectedRoles.length}{t('unit_roles')}
                   </Button>
                 </div>
               </div>
@@ -895,10 +895,10 @@ export function SettingsPage() {
                           className="w-4 h-4 accent-sky-500"
                         />
                       </th>
-                      <th className="text-left px-3 py-2 font-medium">角色</th>
+                      <th className="text-left px-3 py-2 font-medium">{t('t_o5pc')}</th>
                       <th className="text-left px-3 py-2 font-medium">Provider</th>
-                      <th className="text-left px-3 py-2 font-medium">模型</th>
-                      <th className="text-left px-3 py-2 font-medium">温度</th>
+                      <th className="text-left px-3 py-2 font-medium">{t('t_ij62')}</th>
+                      <th className="text-left px-3 py-2 font-medium">{t('t_j999')}</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-slate-700/40">
@@ -929,7 +929,7 @@ export function SettingsPage() {
                               onChange={(e) => updateRole(role, 'provider', e.target.value)}
                               className="bg-slate-900 border border-slate-700 text-slate-200 text-xs rounded px-2 py-1"
                             >
-                              <option value="">跟随默认</option>
+                              <option value="">{t('t_ij08yk')}</option>
                               {providerKeys.map((pk) => (
                                 <option key={pk} value={pk}>{getModelCfg().providers[pk].alias || pk}</option>
                               ))}
@@ -941,7 +941,7 @@ export function SettingsPage() {
                               onChange={(e) => updateRole(role, 'model', e.target.value)}
                               className="bg-slate-900 border border-slate-700 text-slate-200 text-xs rounded px-2 py-1 w-40"
                             >
-                              <option value="">跟随 Provider 默认</option>
+                              <option value="">{t('t_rs98')}</option>
                               {availableModels.map((m) => (
                                 <option key={m} value={m}>{m}</option>
                               ))}
@@ -968,7 +968,7 @@ export function SettingsPage() {
                 </table>
               </div>
               <div className="text-xs text-slate-500">
-                最佳实践：创作类角色（作者、编辑、润色）建议温度 0.8~0.9；审核/评审/结构类角色建议温度 0~0.3，以降低幻觉并提高稳定性。Provider 留空则跟随「默认 Provider」，模型留空则跟随该 Provider 的默认模型（未设置则使用第一个可用模型）。
+                最佳实践：创作类角色（作者、{t('btn_edit')}、润色）建议温度 0.8~0.9；审核/评审/结构类角色建议温度 0~0.3，以降低幻觉并提高稳定性。Provider 留空则跟随「默认 Provider」，模型留空则跟随该 Provider 的默认模型（未设置则使用第一个可用模型）。
               </div>
             </div>
 
@@ -976,14 +976,12 @@ export function SettingsPage() {
             <div className="p-4 bg-slate-900/40 border border-slate-700/40 rounded-lg space-y-3">
               <div className="flex items-center justify-between">
                 <div>
-                  <h3 className="text-sm font-medium text-slate-200">Agent 模型分配</h3>
-                  <div className="text-xs text-slate-500 mt-0.5">
-                    为每个写作 Agent 独立指定 Provider + Model + Temperature，覆盖「角色默认模型」的通用配置。留空则回退到角色默认模型。
-                  </div>
+                  <h3 className="text-sm font-medium text-slate-200">{t('t_ij62')}</h3>
+                  <div className="text-xs text-slate-500 mt-0.5">{t('desc_agent_models')}</div>
                 </div>
                 <div className="flex gap-2">
-                  <Button size="sm" variant="secondary" onClick={syncAgentModelsFromRoles}>从角色默认同步</Button>
-                  <Button size="sm" variant="secondary" onClick={clearAgentModels}>清空</Button>
+                  <Button size="sm" variant="secondary" onClick={syncAgentModelsFromRoles}>{t('t_18x5w6l')}</Button>
+                  <Button size="sm" variant="secondary" onClick={clearAgentModels}>{t('t_jdw5')}</Button>
                 </div>
               </div>
 
@@ -993,8 +991,8 @@ export function SettingsPage() {
                     <tr>
                       <th className="text-left px-3 py-2 font-medium">Agent</th>
                       <th className="text-left px-3 py-2 font-medium">Provider</th>
-                      <th className="text-left px-3 py-2 font-medium">模型</th>
-                      <th className="text-left px-3 py-2 font-medium">温度</th>
+                      <th className="text-left px-3 py-2 font-medium">{t('t_ij62')}</th>
+                      <th className="text-left px-3 py-2 font-medium">{t('t_j999')}</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-slate-700/40">
@@ -1011,7 +1009,7 @@ export function SettingsPage() {
                               onChange={(e) => updateAgentModel(role, 'provider', e.target.value)}
                               className="bg-slate-900 border border-slate-700 text-slate-200 text-xs rounded px-2 py-1"
                             >
-                              <option value="">跟随角色默认</option>
+                              <option value="">{t('t_q1nu10')}</option>
                               {providerKeys.map((pk) => (
                                 <option key={pk} value={pk}>{getModelCfg().providers[pk].alias || pk}</option>
                               ))}
@@ -1023,7 +1021,7 @@ export function SettingsPage() {
                               onChange={(e) => updateAgentModel(role, 'model', e.target.value)}
                               className="bg-slate-900 border border-slate-700 text-slate-200 text-xs rounded px-2 py-1 w-40"
                             >
-                              <option value="">跟随 Provider 默认</option>
+                              <option value="">{t('t_rs98')}</option>
                               {availableModels.map((m) => (
                                 <option key={m} value={m}>{m}</option>
                               ))}
@@ -1049,16 +1047,14 @@ export function SettingsPage() {
                   </tbody>
                 </table>
               </div>
-              <div className="text-xs text-slate-500">
-                提示：Agent 模型分配优先级高于「角色默认模型」。例如可设置 Writer 使用轻量模型降低成本，Editor 使用强模型提高审阅质量。
-              </div>
+              <div className="text-xs text-slate-500">{t('desc_agent_hint')}</div>
             </div>
 
             {/* ===== 作家轮换（高级选项） ===== */}
             <div className="p-4 bg-slate-900/40 border border-slate-700/40 rounded-lg space-y-3">
               <div className="flex items-center justify-between cursor-pointer" onClick={() => setShowAdvanced(!showAdvanced)}>
-                <h3 className="text-sm font-medium text-slate-200">高级选项：作家轮换模型</h3>
-                <span className="text-xs text-slate-500">{showAdvanced ? '收起 ▲' : '展开 ▼'}</span>
+                <h3 className="text-sm font-medium text-slate-200">{t('t_ij62')}</h3>
+                <span className="text-xs text-slate-500">{showAdvanced ? t('btn_collapse') : t('btn_expand')}</span>
               </div>
               {showAdvanced && (
                 <div className="space-y-3">
@@ -1069,16 +1065,14 @@ export function SettingsPage() {
                       onChange={(e) => updateWriterRotation('enabled', e.target.checked)}
                       className="w-4 h-4 accent-sky-500"
                     />
-                    <span className="text-xs text-slate-400">{getModelCfg().writerRotation?.enabled ? '已启用' : '未启用'}</span>
+                    <span className="text-xs text-slate-400">{t('t_e6c0b')}</span>
                   </div>
-                  <div className="text-xs text-slate-500">
-                    启用后，第 1 章使用列表第 1 个模型，第 2 章使用第 2 个模型，依此类推循环切换。
-                  </div>
+                  <div className="text-xs text-slate-500">{t('desc_writer_rotation')}</div>
                   <div className="space-y-2">
                     {(getModelCfg().writerRotation?.models || []).map((item, idx) => (
                       <div key={idx} className="grid grid-cols-1 sm:grid-cols-5 gap-2 items-center p-2 bg-slate-900/60 rounded border border-slate-700/40">
                         <div className="sm:col-span-1">
-                          <Input value={item.alias || ''} onChange={(e) => updateRotationItem(idx, 'alias', e.target.value)} placeholder="别名" />
+                          <Input value={item.alias || ''} onChange={(e) => updateRotationItem(idx, 'alias', e.target.value)} placeholder={t("t_efr6")} />
                         </div>
                         <div className="sm:col-span-1">
                           <select
@@ -1097,7 +1091,7 @@ export function SettingsPage() {
                             onChange={(e) => updateRotationItem(idx, 'model', e.target.value)}
                             className="w-full bg-slate-900 border border-slate-700 text-slate-200 text-sm rounded px-2 py-1.5"
                           >
-                            <option value="">选择模型</option>
+                            <option value="">{t('t_il0ebu')}</option>
                             {item.provider && (getModelCfg().providers[item.provider]?.models || []).map((m) => (
                               <option key={m} value={m}>{m}</option>
                             ))}
@@ -1116,15 +1110,15 @@ export function SettingsPage() {
                           <span className="text-xs text-slate-400 w-10">{(typeof item.temperature === 'number' ? item.temperature : 0.85).toFixed(2)}</span>
                         </div>
                         <div className="sm:col-span-1 text-right">
-                          <Button variant="danger" size="sm" onClick={() => removeRotationItem(idx)}>删除</Button>
+                          <Button variant="danger" size="sm" onClick={() => removeRotationItem(idx)}>{t('t_eslg')}</Button>
                         </div>
                       </div>
                     ))}
                     {!(getModelCfg().writerRotation?.models || []).length && (
-                      <div className="text-xs text-slate-500 italic">暂无轮换模型，点击「添加模型」开始配置。</div>
+                      <div className="text-xs text-slate-500 italic">{t('t_e7zvbj')}</div>
                     )}
                   </div>
-                  <Button size="sm" onClick={addRotationItem}>添加模型</Button>
+                  <Button size="sm" onClick={addRotationItem}>{t('t_e7zvbj')}</Button>
                 </div>
               )}
             </div>
@@ -1134,8 +1128,8 @@ export function SettingsPage() {
         {activeTab === 'chapter' && (
           <div className="space-y-5">
             <div>
-              <CardTitle className="mb-3">章节字数配置</CardTitle>
-              <p className="text-xs text-slate-500 mb-4">这些配置会同时影响 Prompt 模板中的字数要求和 Fitness 评估的目标字数。</p>
+              <CardTitle className="mb-3">{t('t_24cv8c')}</CardTitle>
+              <p className="text-xs text-slate-500 mb-4">{t('_prompt__fitness_')}</p>
               {(() => {
                 const cfg = settings.chapterConfig || {};
                 const defaults = { targetWords: 2000, minWords: 1800, maxWords: 2200, absoluteMin: 1600, absoluteMax: 2500 };
@@ -1149,28 +1143,28 @@ export function SettingsPage() {
                 return (
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div className="bg-slate-900/40 border border-slate-700/40 rounded-lg p-4">
-                      <label className="text-sm text-slate-300 block mb-1">目标字数</label>
-                      <p className="text-xs text-slate-500 mb-2">Prompt 中要求 AI 写作的目标字数</p>
+                      <label className="text-sm text-slate-300 block mb-1">{t('t_ffp576')}</label>
+                      <p className="text-xs text-slate-500 mb-2">{t('prompt__ai_')}</p>
                       <Input type="number" value={cfg.targetWords ?? defaults.targetWords} onChange={(e) => updateChapterCfg('targetWords', e.target.value)} />
                     </div>
                     <div className="bg-slate-900/40 border border-slate-700/40 rounded-lg p-4">
-                      <label className="text-sm text-slate-300 block mb-1">允许最小字数</label>
-                      <p className="text-xs text-slate-500 mb-2">Prompt 中允许的字数下限</p>
+                      <label className="text-sm text-slate-300 block mb-1">{t('t_11w3rdr')}</label>
+                      <p className="text-xs text-slate-500 mb-2">{t('desc_min_words')}</p>
                       <Input type="number" value={cfg.minWords ?? defaults.minWords} onChange={(e) => updateChapterCfg('minWords', e.target.value)} />
                     </div>
                     <div className="bg-slate-900/40 border border-slate-700/40 rounded-lg p-4">
-                      <label className="text-sm text-slate-300 block mb-1">允许最大字数</label>
-                      <p className="text-xs text-slate-500 mb-2">Prompt 中允许的字数上限</p>
+                      <label className="text-sm text-slate-300 block mb-1">{t('t_11vofp3')}</label>
+                      <p className="text-xs text-slate-500 mb-2">{t('desc_max_words')}</p>
                       <Input type="number" value={cfg.maxWords ?? defaults.maxWords} onChange={(e) => updateChapterCfg('maxWords', e.target.value)} />
                     </div>
                     <div className="bg-slate-900/40 border border-slate-700/40 rounded-lg p-4">
-                      <label className="text-sm text-slate-300 block mb-1">绝对最小字数</label>
-                      <p className="text-xs text-slate-500 mb-2">Prompt 中禁止低于的字数（硬下限）</p>
+                      <label className="text-sm text-slate-300 block mb-1">{t('t_iv2fp8')}</label>
+                      <p className="text-xs text-slate-500 mb-2">{t('prompt__')}</p>
                       <Input type="number" value={cfg.absoluteMin ?? defaults.absoluteMin} onChange={(e) => updateChapterCfg('absoluteMin', e.target.value)} />
                     </div>
                     <div className="bg-slate-900/40 border border-slate-700/40 rounded-lg p-4">
-                      <label className="text-sm text-slate-300 block mb-1">绝对最大字数</label>
-                      <p className="text-xs text-slate-500 mb-2">Prompt 中禁止高于的字数（硬上限）</p>
+                      <label className="text-sm text-slate-300 block mb-1">{t('t_ivhrdw')}</label>
+                      <p className="text-xs text-slate-500 mb-2">{t('desc_absolute_max')}</p>
                       <Input type="number" value={cfg.absoluteMax ?? defaults.absoluteMax} onChange={(e) => updateChapterCfg('absoluteMax', e.target.value)} />
                     </div>
                   </div>
@@ -1184,10 +1178,10 @@ export function SettingsPage() {
           <div className="space-y-5">
             <div className="flex items-center justify-between">
               <div>
-                <CardTitle className="mb-1">写作流水线配置</CardTitle>
-                <p className="text-xs text-slate-500">控制续写时各 Agent 阶段的启用/禁用状态，以及 Plan 预演模式。</p>
+                <CardTitle className="mb-1">{t('t_1s4ie5y')}</CardTitle>
+                <p className="text-xs text-slate-500">{t('_agent____plan_')}</p>
               </div>
-              <Button size="sm" onClick={handleSavePipeline}>保存流水线配置</Button>
+              <Button size="sm" onClick={handleSavePipeline}>{t('t_e6c19q')}</Button>
             </div>
 
             {/* Plan 模式开关 */}
@@ -1200,19 +1194,19 @@ export function SettingsPage() {
                   className="w-4 h-4 accent-sky-500"
                 />
                 <div>
-                  <div className="text-sm font-medium text-slate-200">Plan 预演模式</div>
-                  <div className="text-xs text-slate-500">续写前先生成章节节拍规划，作者确认后再执行 Writer</div>
+                  <div className="text-sm font-medium text-slate-200">{t('plan_')}</div>
+                  <div className="text-xs text-slate-500">{t('__writer')}</div>
                 </div>
               </div>
             </div>
 
             {/* Stage 开关 */}
             <div className="p-4 bg-slate-900/40 border border-slate-700/40 rounded-lg space-y-3">
-              <div className="text-sm font-medium text-slate-200 mb-2">Agent 阶段开关</div>
+              <div className="text-sm font-medium text-slate-200 mb-2">{t('label_agent_stages')}</div>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 {[
                   { key: 'writer', label: '作者（Writer）', desc: '生成初稿' },
-                  { key: 'editor', label: '编辑（Editor）', desc: '改稿审阅' },
+                  { key: 'editor', label: '{t('btn_edit')}（Editor）', desc: '改稿审阅' },
                   { key: 'humanizer', label: '去AI化（Humanizer）', desc: '降低 AI 痕迹' },
                   { key: 'proofreader', label: '校编（Proofreader）', desc: '校对语法和逻辑' },
                   { key: 'reader', label: '读者反馈（Reader）', desc: '模拟读者评审' },
@@ -1240,9 +1234,7 @@ export function SettingsPage() {
                   );
                 })}
               </div>
-              <div className="text-xs text-slate-500 mt-2">
-                提示：禁用某些阶段可以加速写作流程、降低 Token 消耗。Writer、Summarizer 不建议禁用（会影响后续章节上下文构建）。
-              </div>
+              <div className="text-xs text-slate-500 mt-2">{t('desc_stage_hint')}</div>
             </div>
           </div>
         )}

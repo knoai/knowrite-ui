@@ -4,6 +4,7 @@ import { CardHeader, CardTitle } from '../ui/Card';
 import { Input, Textarea } from '../ui/Input';
 import { Modal } from './Modal';
 import * as api from '../../api/novel';
+import { useI18n } from '../../contexts/I18nContext';
 
 const LINE_TYPES = ['主线', '支线', '暗线', '感情线'];
 const NODE_TYPES = ['起点', '发展', '高潮', '转折', '结局', '伏笔', '回收'];
@@ -11,6 +12,7 @@ const STATUSES = ['进行中', '已完结', '待展开'];
 const NODE_STATUSES = ['待展开', '已发生', '已回收'];
 
 export function PlotLinePanel({ workId }) {
+  const { t } = useI18n();
   const [lines, setLines] = useState([]);
   const [loading, setLoading] = useState(false);
   const [expanded, setExpanded] = useState(new Set());
@@ -61,11 +63,11 @@ export function PlotLinePanel({ workId }) {
   return (
     <div className="space-y-4">
       <CardHeader className="!mb-0">
-        <CardTitle className="flex items-center gap-2"><GitBranch size={16} /> 剧情线图谱</CardTitle>
-        <button onClick={openLineCreate} className="flex items-center gap-1 text-sm px-3 py-1.5 rounded-lg bg-sky-600 hover:bg-sky-500 text-white transition"><Plus size={14} /> 剧情线</button>
+        <CardTitle className="flex items-center gap-2"><GitBranch size={16} />{t('t_k8aaks')}</CardTitle>
+        <button onClick={openLineCreate} className="flex items-center gap-1 text-sm px-3 py-1.5 rounded-lg bg-sky-600 hover:bg-sky-500 text-white transition"><Plus size={14} />{t('t_cjnsx')}</button>
       </CardHeader>
 
-      {loading && <div className="text-slate-400 text-sm py-4">加载中...</div>}
+      {loading && <div className="text-slate-400 text-sm py-4">{t('t_27k1ha')}</div>}
 
       <div className="space-y-2">
         {lines.map(line => (
@@ -90,7 +92,7 @@ export function PlotLinePanel({ workId }) {
                         <div className="min-w-0 flex-1">
                           <div className="flex items-center gap-1.5">
                             <span className="text-[10px] px-1 py-0.5 rounded bg-slate-700/50 text-slate-400">{node.nodeType}</span>
-                            <span className="text-slate-300">{node.title || '未命名节点'}</span>
+                            <span className="text-slate-300">{t('t_bst99r')}</span>
                             {node.chapterNumber && <span className="text-xs text-sky-400">第{node.chapterNumber}章</span>}
                             {node.status !== '待展开' && <span className="text-[10px] text-slate-500">[{node.status}]</span>}
                           </div>
@@ -103,8 +105,8 @@ export function PlotLinePanel({ workId }) {
                       </div>
                     ))}
                   </div>
-                ) : <div className="text-xs text-slate-500 py-2">暂无节点</div>}
-                <button onClick={() => openNodeCreate(line.id)} className="mt-2 flex items-center gap-1 text-xs px-2 py-1 rounded bg-slate-800 hover:bg-slate-700 text-slate-300 transition"><Plus size={10} /> 添加节点</button>
+                ) : <div className="text-xs text-slate-500 py-2">{t('t_dd05ud')}</div>}
+                <button onClick={() => openNodeCreate(line.id)} className="mt-2 flex items-center gap-1 text-xs px-2 py-1 rounded bg-slate-800 hover:bg-slate-700 text-slate-300 transition"><Plus size={10} />{t('t_e845ks')}</button>
               </div>
             )}
           </div>
@@ -112,11 +114,11 @@ export function PlotLinePanel({ workId }) {
       </div>
 
       {!loading && lines.length === 0 && (
-        <div className="text-center text-slate-500 text-sm py-8 bg-slate-900/20 rounded-lg border border-dashed border-slate-700">暂无剧情线，点击上方按钮添加</div>
+        <div className="text-center text-slate-500 text-sm py-8 bg-slate-900/20 rounded-lg border border-dashed border-slate-700">{t('t_cjnsx')}</div>
       )}
 
       <Modal open={lineModal} onClose={() => setLineModal(false)} title={editingLine ? '编辑剧情线' : '新增剧情线'} onConfirm={saveLine} confirmDisabled={!lineForm.name}>
-        <Input value={lineForm.name} onChange={e => setLineForm({ ...lineForm, name: e.target.value })} placeholder="剧情线名称" />
+        <Input value={lineForm.name} onChange={e => setLineForm({ ...lineForm, name: e.target.value })} placeholder={t("t_k8aw70")} />
         <div className="grid grid-cols-3 gap-3">
           <select value={lineForm.type} onChange={e => setLineForm({ ...lineForm, type: e.target.value })} className="w-full px-3 py-2 rounded-lg border border-slate-600 bg-slate-900/60 text-slate-50 text-sm">{LINE_TYPES.map(t => <option key={t} value={t}>{t}</option>)}</select>
           <select value={lineForm.status} onChange={e => setLineForm({ ...lineForm, status: e.target.value })} className="w-full px-3 py-2 rounded-lg border border-slate-600 bg-slate-900/60 text-slate-50 text-sm">{STATUSES.map(t => <option key={t} value={t}>{t}</option>)}</select>
@@ -125,14 +127,14 @@ export function PlotLinePanel({ workId }) {
       </Modal>
 
       <Modal open={nodeModal} onClose={() => setNodeModal(false)} title={editingNode ? '编辑节点' : '新增节点'} onConfirm={saveNode} confirmDisabled={!nodeForm.title}>
-        <Input value={nodeForm.title} onChange={e => setNodeForm({ ...nodeForm, title: e.target.value })} placeholder="节点标题" />
+        <Input value={nodeForm.title} onChange={e => setNodeForm({ ...nodeForm, title: e.target.value })} placeholder={t("t_gxm0q0")} />
         <div className="grid grid-cols-3 gap-3">
           <select value={nodeForm.nodeType} onChange={e => setNodeForm({ ...nodeForm, nodeType: e.target.value })} className="w-full px-3 py-2 rounded-lg border border-slate-600 bg-slate-900/60 text-slate-50 text-sm">{NODE_TYPES.map(t => <option key={t} value={t}>{t}</option>)}</select>
           <select value={nodeForm.status} onChange={e => setNodeForm({ ...nodeForm, status: e.target.value })} className="w-full px-3 py-2 rounded-lg border border-slate-600 bg-slate-900/60 text-slate-50 text-sm">{NODE_STATUSES.map(t => <option key={t} value={t}>{t}</option>)}</select>
-          <Input type="number" value={nodeForm.chapterNumber} onChange={e => setNodeForm({ ...nodeForm, chapterNumber: e.target.value })} placeholder="章节号" />
+          <Input type="number" value={nodeForm.chapterNumber} onChange={e => setNodeForm({ ...nodeForm, chapterNumber: e.target.value })} placeholder={t("t_imkr9")} />
         </div>
-        <Input type="number" value={nodeForm.position} onChange={e => setNodeForm({ ...nodeForm, position: e.target.value })} placeholder="排序位置" />
-        <Textarea value={nodeForm.description} onChange={e => setNodeForm({ ...nodeForm, description: e.target.value })} placeholder="节点描述..." />
+        <Input type="number" value={nodeForm.position} onChange={e => setNodeForm({ ...nodeForm, position: e.target.value })} placeholder={t("t_cycs72")} />
+        <Textarea value={nodeForm.description} onChange={e => setNodeForm({ ...nodeForm, description: e.target.value })} placeholder={t("t_27ixvey")} />
       </Modal>
     </div>
   );

@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState, useCallback } from 'react';
+import { useI18n } from '../contexts/I18nContext';
 
 const API_BASE = import.meta.env.VITE_API_BASE || 'http://localhost:8000';
 const MAX_LOGS = 500;
@@ -9,6 +10,7 @@ function formatTime(iso) {
 }
 
 export function LogPanel() {
+  const { t } = useI18n();
   const [expanded, setExpanded] = useState(false);
   const [logs, setLogs] = useState([]);
   const [unread, setUnread] = useState(0);
@@ -108,7 +110,7 @@ export function LogPanel() {
       <button
         onClick={() => setExpanded(true)}
         className="fixed bottom-4 right-4 z-50 w-12 h-12 rounded-full bg-slate-800 border border-slate-700 text-slate-200 shadow-lg hover:bg-slate-700 transition-colors flex items-center justify-center"
-        title="系统日志"
+        title={t('title_system_log')}
       >
         <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
           <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
@@ -134,21 +136,21 @@ export function LogPanel() {
       <div className="flex items-center justify-between px-3 py-2 border-b border-slate-700/40">
         <div className="flex items-center gap-2">
           <span className="w-2 h-2 rounded-full bg-green-500 animate-pulse"></span>
-          <span className="text-sm font-medium text-slate-200">系统日志</span>
+          <span className="text-sm font-medium text-slate-200">{t('title_system_log')}</span>
           <span className="text-xs text-slate-500">({logs.length})</span>
         </div>
         <div className="flex items-center gap-1">
           <button
             onClick={() => setLogs([])}
             className="text-xs text-slate-500 hover:text-slate-300 px-2 py-1 rounded hover:bg-slate-800 transition"
-            title="清空"
+            title={t('btn_clear')}
           >
-            清空
+            {t('btn_clear')}
           </button>
           <button
             onClick={() => setExpanded(false)}
             className="text-xs text-slate-500 hover:text-slate-300 px-2 py-1 rounded hover:bg-slate-800 transition"
-            title="最小化"
+            title={t('btn_minimize')}
           >
             <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
               <polyline points="4 14 10 14 10 20"></polyline>
@@ -173,7 +175,7 @@ export function LogPanel() {
         }}
       >
         {logs.length === 0 && (
-          <div className="text-slate-600 text-center py-8">暂无日志</div>
+          <div className="text-slate-600 text-center py-8">{t('msg_no_logs')}</div>
         )}
         {logs.map((log, idx) => (
           <div key={idx} className="flex items-start gap-2 py-0.5 hover:bg-slate-800/50 rounded px-1">
@@ -186,9 +188,9 @@ export function LogPanel() {
 
       {/* 状态栏 */}
       <div className="flex items-center justify-between px-3 py-1.5 border-t border-slate-700/40 text-[10px] text-slate-500">
-        <span>{autoScroll ? '自动滚动中' : '已暂停自动滚动'}</span>
+        <span>{autoScroll ? t('status_auto_scrolling') : t('status_paused_scroll')}</span>
         <span className={esRef.current?.readyState === EventSource.OPEN ? 'text-green-500' : 'text-red-500'}>
-          {esRef.current?.readyState === EventSource.OPEN ? '已连接' : '连接中...'}
+          {esRef.current?.readyState === EventSource.OPEN ? t('status_connected') : t('status_connecting')}
         </span>
       </div>
     </div>

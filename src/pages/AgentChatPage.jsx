@@ -3,9 +3,11 @@ import { Card, CardHeader, CardTitle } from '../components/ui/Card';
 import { Button } from '../components/ui/Button';
 import { Textarea } from '../components/ui/Input';
 import { useWork } from '../contexts/WorkContext';
+import { useI18n } from '../contexts/I18nContext';
 import * as api from '../api/novel';
 
 export function AgentChatPage() {
+  const { t } = useI18n();
   const { works, currentWorkId, selectWork, refreshWorks } = useWork();
   const [messages, setMessages] = useState([]);
   const [input, setInput] = useState('');
@@ -67,13 +69,13 @@ export function AgentChatPage() {
         },
         ctrl.signal
       );
-      const finalText = streamRef.current || '（无返回）';
+      const finalText = streamRef.current || t('no_response');
       const foundActions = parseActions(finalText);
       setActions(foundActions);
       setMessages((prev) => [...prev, { role: 'assistant', content: finalText }]);
     } catch (e) {
       if (e.name !== 'AbortError') {
-        setMessages((prev) => [...prev, { role: 'assistant', content: `❌ 错误: ${e.message}` }]);
+        setMessages((prev) => [...prev, { role: 'assistant', content: `❌ ${t('label_error')}: ${e.message}` }]);
       }
     } finally {
       setStreaming(false);
@@ -99,15 +101,15 @@ export function AgentChatPage() {
       <Card className="flex flex-col h-full !p-0">
         <CardHeader className="!mx-0 !mt-0">
           <div className="flex items-center justify-between">
-            <CardTitle className="text-base">对话式创作 Agent</CardTitle>
+            <CardTitle className="text-base">{t('agent_chat_page_title')}</CardTitle>
             <div className="flex items-center gap-2">
-              <label className="text-xs text-slate-400">当前作品</label>
+              <label className="text-xs text-slate-400">{t('label_current_work')}</label>
               <select
                 value={currentWorkId || ''}
                 onChange={(e) => selectWork(e.target.value)}
                 className="bg-slate-900 border border-slate-700 text-slate-200 text-sm rounded px-2 py-1 min-w-[10rem]"
               >
-                <option value="">选择作品</option>
+                <option value="">{t('option_select_work')}</option>
                 {works.map((w) => (
                   <option key={w.id} value={w.id}>{w.title}</option>
                 ))}
@@ -115,7 +117,7 @@ export function AgentChatPage() {
             </div>
           </div>
           <p className="text-xs text-slate-500 mt-1">
-            用自然语言命令 Agent 修改作品：续写章节、编辑大纲、调整角色设定、修改世界观等。
+            {t('agent_chat_description')}
           </p>
         </CardHeader>
 
@@ -124,8 +126,8 @@ export function AgentChatPage() {
           {messages.length === 0 && (
             <div className="text-center text-slate-500 text-sm py-10">
               {currentWorkId
-                ? '输入命令开始创作，例如：\n"续写下一章"\n"把主角的性格改得更冷酷一些"\n"给第三章增加一个反转"'
-                : '请先选择一部作品'}
+                ? t('chat_empty_hint_with_work')
+                : t('chat_empty_hint_no_work')}
             </div>
           )}
 
@@ -155,7 +157,7 @@ export function AgentChatPage() {
           {/* 执行的动作 */}
           {actions.length > 0 && (
             <div className="bg-emerald-500/10 border border-emerald-500/20 rounded-xl px-4 py-3">
-              <div className="text-xs font-semibold text-emerald-400 mb-2">Agent 执行了以下操作：</div>
+              <div className="text-xs font-semibold text-emerald-400 mb-2">{t('actions_executed_title')}</div>
               <div className="space-y-2">
                 {actions.map((a, i) => (
                   <div key={i} className="text-xs text-slate-300">
@@ -178,21 +180,21 @@ export function AgentChatPage() {
               value={input}
               onChange={(e) => setInput(e.target.value)}
               onKeyDown={handleKeyDown}
-              placeholder={currentWorkId ? "输入命令..." : "请先选择作品"}
+              placeholder={currentWorkId ? t('placeholder_enter_command') : t('placeholder_select_work_first')}
               rows={2}
               disabled={streaming || !currentWorkId}
               className="flex-1 text-sm"
             />
             <div className="flex flex-col gap-2">
               {streaming ? (
-                <Button variant="danger" size="sm" onClick={handleStop}>停止</Button>
+                <Button variant="danger" size="sm" onClick={handleStop}>{t('btn_stop')}</Button>
               ) : (
                 <Button variant="primary" size="sm" onClick={doSend} disabled={!input.trim() || !currentWorkId}>
-                  发送
+                  {t('btn_send')}
                 </Button>
               )}
               <Button variant="ghost" size="sm" onClick={() => { setMessages([]); setActions([]); }} disabled={streaming || messages.length === 0}>
-                清空
+                {t('btn_clear')}
               </Button>
             </div>
           </div>

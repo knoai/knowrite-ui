@@ -8,26 +8,26 @@ import { Stepper } from '../components/ui/Stepper';
 import { EmptyState } from '../components/ui/EmptyState';
 import { useWork } from '../contexts/WorkContext';
 import { useToast } from '../components/ui/Toast';
+import { useI18n } from '../contexts/I18nContext';
 import * as api from '../api/novel';
-
-const STEPS = ['写下想法', '选择风格', '开始创作'];
-
-const INSPIRATION_TAGS = [
-  '退婚逆袭', '系统觉醒', '重生复仇', '穿越古代', '末日求生',
-  '修仙问道', '商战逆袭', '悬疑探案', '甜宠恋爱', '机甲战争',
-];
-
-const STRATEGY_CARDS = [
-  { key: 'pipeline', label: '快速模式', icon: Zap, desc: '1-2分钟', sub: '适合试水和短篇', color: 'amber' },
-  { key: 'knowrite', label: '精品模式', icon: Target, desc: '5-15分钟', sub: '质量更高，多轮精修', color: 'sky' },
-];
-
-const WRITING_MODE_CARDS = [
-  { key: 'industrial', label: '工业风', icon: Factory, desc: '严格量产', sub: '8条规则、3轮编辑、重度去AI', color: 'slate' },
-  { key: 'free', label: '自由风', icon: Palette, desc: '创意探索', sub: '2条底线、1轮轻量、轻度去AI', color: 'violet' },
-];
+import { useI18n } from '../contexts/I18nContext';
 
 export function CreatePage() {
+  const { t } = useI18n();
+  const STEPS = [t('step_idea'), t('step_style'), t('step_create')];
+  const INSPIRATION_TAGS = [
+    t('tag_breakup'), t('tag_system'), t('tag_revenge'), t('tag_time_travel'), t('tag_apocalypse'),
+    t('tag_cultivation'), t('tag_business'), t('tag_mystery'), t('tag_romance'), t('tag_mecha'),
+  ];
+  const STRATEGY_CARDS = [
+    { key: 'pipeline', label: t('label_fast_mode'), icon: Zap, desc: t('desc_1_2_min'), sub: t('sub_short_try'), color: 'amber' },
+    { key: 'knowrite', label: t('label_premium_mode'), icon: Target, desc: t('desc_5_15_min'), sub: t('sub_high_quality'), color: 'sky' },
+  ];
+  const WRITING_MODE_CARDS = [
+    { key: 'industrial', label: t('label_industrial'), icon: Factory, desc: t('desc_strict_mass'), sub: t('sub_8_rules'), color: 'slate' },
+    { key: 'free', label: t('label_free'), icon: Palette, desc: t('desc_creative'), sub: t('sub_2_rules'), color: 'violet' },
+  ];
+  const { t } = useI18n();
   const navigate = useNavigate();
   const { refreshWorks } = useWork();
   const { addToast } = useToast();
@@ -37,8 +37,8 @@ export function CreatePage() {
   const [topic, setTopic] = useState('');
 
   // Step 2
-  const [platformStyle, setPlatformStyle] = useState('番茄');
-  const [authorStyle, setAuthorStyle] = useState('热血磅礴');
+  const [platformStyle, setPlatformStyle] = useState('');
+  const [authorStyle, setAuthorStyle] = useState('');
   const [strategy, setStrategy] = useState('pipeline');
   const [writingMode, setWritingMode] = useState('industrial');
   const [platformStyles, setPlatformStyles] = useState([]);
@@ -73,7 +73,7 @@ export function CreatePage() {
   }, [refreshWorks]);
 
   const handleStart = async () => {
-    if (!topic.trim()) { addToast('请先输入小说主题', 'error'); return; }
+    if (!topic.trim()) { addToast(t('err_enter_topic'), 'error'); return; }
     setStreamText(''); setStatus(''); setStarting(true); setSteps([]);
     const controller = new AbortController();
     try {
@@ -92,15 +92,15 @@ export function CreatePage() {
           setSteps(prev => prev.map(s => s.step === ev.step ? { ...s, status: 'done' } : s));
         }
       });
-      addToast('创作完成！', 'success');
+      addToast(t('msg_creation_done'), 'success');
       await refreshWorks();
     } catch (e) {
       if (e.name !== 'AbortError') {
         const isConfigError = e.message?.includes('模型配置') || e.message?.includes('Provider') || e.message?.includes('baseURL') || e.message?.includes('apiKey');
         const isNetworkError = e.message?.includes('网络错误') || e.message?.includes('ECONNREFUSED');
         let display = e.message;
-        if (isConfigError) display = '【模型配置错误】请前往「设置 → 模型配置」检查 Provider、Base URL、API Key 和模型名称是否正确。';
-        if (isNetworkError) display = '【网络错误】无法连接到模型服务，请检查 Base URL 是否正确、服务是否运行。';
+        if (isConfigError) display = t('err_model_config');
+        if (isNetworkError) display = t('err_network');
         addToast(display, 'error');
         setStatus(display);
       }
@@ -110,15 +110,15 @@ export function CreatePage() {
   };
 
   const handleImport = async () => {
-    if (!importTitle.trim() || !importContent.trim()) { addToast('请填写标题和正文', 'error'); return; }
+    if (!importTitle.trim() || !importContent.trim()) { addToast(t('err_enter_title_content'), 'error'); return; }
     setImporting(true);
     try {
       await api.importNovel({ title: importTitle.trim(), content: importContent.trim(), platformStyle, authorStyle });
-      addToast('导入成功！', 'success');
+      addToast(t('msg_import_success'), 'success');
       await refreshWorks();
       setImportTitle(''); setImportContent('');
     } catch (e) {
-      addToast('导入失败: ' + e.message, 'error');
+      addToast(t('err_import') + e.message, 'error');
     } finally {
       setImporting(false);
     }
@@ -135,13 +135,13 @@ export function CreatePage() {
           onClick={() => setTab('create')}
           className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition ${tab === 'create' ? 'bg-sky-500 text-white shadow-lg shadow-sky-900/20' : 'text-slate-400 hover:text-slate-200'}`}
         >
-          <Sparkles size={14} /> 创作新作品
+          <Sparkles size={14} /> {t('tab_create_new')}
         </button>
         <button
           onClick={() => setTab('import')}
           className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition ${tab === 'import' ? 'bg-sky-500 text-white shadow-lg shadow-sky-900/20' : 'text-slate-400 hover:text-slate-200'}`}
         >
-          <FileText size={14} /> 导入已有作品
+          <FileText size={14} /> {t('tab_import_existing')}
         </button>
       </div>
 
@@ -155,8 +155,8 @@ export function CreatePage() {
                   <Sparkles size={20} className="text-sky-400" />
                 </div>
                 <div>
-                  <h2 className="text-lg font-bold text-slate-100">开始新创作</h2>
-                  <p className="text-xs text-slate-500">3步完成，AI 帮你把想法变成小说</p>
+                  <h2 className="text-lg font-bold text-slate-100">{t('t_16zjk9m')}</h2>
+                  <p className="text-xs text-slate-500">{t('3_ai_')}</p>
                 </div>
               </div>
               <Stepper steps={STEPS} currentStep={step} />
@@ -167,21 +167,21 @@ export function CreatePage() {
           {step === 0 && (
             <div className="p-6 space-y-5">
               <div>
-                <label className="block text-sm font-medium text-slate-200 mb-2">今天想写什么故事？</label>
+                <label className="block text-sm font-medium text-slate-200 mb-2">{t('t_2ezdm4')}</label>
                 <Textarea
                   value={topic}
                   onChange={(e) => setTopic(e.target.value)}
-                  placeholder="例如：一个失忆杀手在古代江湖寻找身世，却发现自己是被皇室追杀的皇子..."
+                  placeholder={t('ph_story_example')}
                   className="!min-h-[140px] !text-base"
                 />
               </div>
               <div>
-                <label className="block text-xs text-slate-500 mb-2">没有灵感？试试这些：</label>
+                <label className="block text-xs text-slate-500 mb-2">{t('label_no_inspiration')}</label>
                 <div className="flex flex-wrap gap-2">
                   {INSPIRATION_TAGS.map(tag => (
                     <button
                       key={tag}
-                      onClick={() => setTopic(tag + '：')}
+                      onClick={() => setTopic(tag + t('colon'))}
                       className="px-3 py-1.5 rounded-lg bg-slate-800/60 border border-slate-700/40 text-xs text-slate-400 hover:text-sky-400 hover:border-sky-500/30 hover:bg-sky-500/5 transition"
                     >
                       {tag}
@@ -191,7 +191,7 @@ export function CreatePage() {
               </div>
               <div className="flex justify-end pt-2">
                 <Button variant="primary" size="lg" onClick={() => topic.trim() && setStep(1)} disabled={!topic.trim()}>
-                  下一步 <ArrowRight size={16} />
+                  {t('btn_next')} <ArrowRight size={16} />
                 </Button>
               </div>
             </div>
@@ -202,7 +202,7 @@ export function CreatePage() {
             <div className="p-6 space-y-6 max-h-[65vh] overflow-y-auto">
               {/* Platform Style */}
               <div>
-                <label className="block text-sm font-medium text-slate-200 mb-2">发布平台</label>
+                <label className="block text-sm font-medium text-slate-200 mb-2">{t('t_ayt2gf')}</label>
                 <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-2">
                   {platformStyles.map((s, i) => (
                     <button
@@ -223,7 +223,7 @@ export function CreatePage() {
 
               {/* Author Style */}
               <div>
-                <label className="block text-sm font-medium text-slate-200 mb-2">作者风格</label>
+                <label className="block text-sm font-medium text-slate-200 mb-2">{t('t_ajtvdj')}</label>
                 <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2">
                   {authorStyles.map((s, i) => (
                     <button
@@ -243,7 +243,7 @@ export function CreatePage() {
 
               {/* Strategy */}
               <div>
-                <label className="block text-sm font-medium text-slate-200 mb-2">生成模式</label>
+                <label className="block text-sm font-medium text-slate-200 mb-2">{t('t_f6oja7')}</label>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                   {STRATEGY_CARDS.map(card => {
                     const Icon = card.icon;
@@ -276,7 +276,7 @@ export function CreatePage() {
 
               {/* Writing Mode */}
               <div>
-                <label className="block text-sm font-medium text-slate-200 mb-2">写作风格</label>
+                <label className="block text-sm font-medium text-slate-200 mb-2">{t('t_amv5u9')}</label>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                   {WRITING_MODE_CARDS.map(card => {
                     const Icon = card.icon;
@@ -307,7 +307,7 @@ export function CreatePage() {
               {/* Story Template */}
               {storyTemplates.length > 0 && (
                 <div>
-                  <label className="block text-sm font-medium text-slate-200 mb-2">套路模版（可选）</label>
+                  <label className="block text-sm font-medium text-slate-200 mb-2">{t('t_buysan')}</label>
                   <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2">
                     <button
                       onClick={() => setSelectedTemplate('')}
@@ -317,8 +317,8 @@ export function CreatePage() {
                           : 'bg-slate-800/30 border-slate-700/40 text-slate-400 hover:border-slate-600 hover:text-slate-300'
                       }`}
                     >
-                      <div className="font-medium text-sm">无套路</div>
-                      <div className="text-[10px] text-slate-500 mt-0.5">自由创作</div>
+                      <div className="font-medium text-sm">{t('t_fd5qw')}</div>
+                      <div className="text-[10px] text-slate-500 mt-0.5">{t('t_gvgeaw')}</div>
                     </button>
                     {storyTemplates.map(t => (
                       <button
@@ -340,10 +340,10 @@ export function CreatePage() {
 
               <div className="flex justify-between pt-2">
                 <Button variant="default" onClick={() => setStep(0)}>
-                  <ArrowLeft size={16} /> 上一步
+                  <ArrowLeft size={16} /> {t('btn_prev')}
                 </Button>
                 <Button variant="primary" size="lg" onClick={() => setStep(2)}>
-                  下一步 <ArrowRight size={16} />
+                  {t('btn_next')} <ArrowRight size={16} />
                 </Button>
               </div>
             </div>
@@ -353,36 +353,36 @@ export function CreatePage() {
           {step === 2 && (
             <div className="p-6 space-y-5">
               <div className="bg-slate-900/40 border border-slate-700/40 rounded-xl p-5 space-y-3">
-                <h3 className="text-sm font-medium text-slate-300 mb-3">配置确认</h3>
+                <h3 className="text-sm font-medium text-slate-300 mb-3">{t('t_iv0dpz')}</h3>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm">
                   <div className="flex items-center gap-2">
-                    <span className="text-slate-500 w-16 shrink-0">主题</span>
+                    <span className="text-slate-500 w-16 shrink-0">{t('t_e56l')}</span>
                     <span className="text-slate-200 truncate">{topic}</span>
                   </div>
                   <div className="flex items-center gap-2">
-                    <span className="text-slate-500 w-16 shrink-0">平台</span>
+                    <span className="text-slate-500 w-16 shrink-0">{t('t_gixp')}</span>
                     <span className="text-sky-400">{platformStyle}</span>
                   </div>
                   <div className="flex items-center gap-2">
-                    <span className="text-slate-500 w-16 shrink-0">风格</span>
+                    <span className="text-slate-500 w-16 shrink-0">{t('t_qka6')}</span>
                     <span className="text-violet-400">{authorStyle}</span>
                   </div>
                   <div className="flex items-center gap-2">
-                    <span className="text-slate-500 w-16 shrink-0">模式</span>
+                    <span className="text-slate-500 w-16 shrink-0">{t('t_ikni')}</span>
                     <span className={strategy === 'pipeline' ? 'text-amber-400' : 'text-sky-400'}>
-                      {strategy === 'pipeline' ? '快速模式' : '精品模式'}
+                      {strategy === 'pipeline' ? t('label_fast_mode') : t('label_premium_mode')}
                     </span>
                   </div>
                   <div className="flex items-center gap-2">
-                    <span className="text-slate-500 w-16 shrink-0">写作</span>
+                    <span className="text-slate-500 w-16 shrink-0">{t('t_ebc3')}</span>
                     <span className={writingMode === 'free' ? 'text-violet-400' : 'text-slate-300'}>
-                      {writingMode === 'free' ? '自由风' : '工业风'}
+                      {writingMode === 'free' ? t('label_free') : t('label_industrial')}
                     </span>
                   </div>
                   {selectedTemplate && (
                     <div className="flex items-center gap-2">
-                      <span className="text-slate-500 w-16 shrink-0">套路</span>
-                      <span className="text-emerald-400">{storyTemplates.find(t => String(t.id) === selectedTemplate)?.name || '已选'}</span>
+                      <span className="text-slate-500 w-16 shrink-0">{t('t_fz3s')}</span>
+                      <span className="text-emerald-400">{storyTemplates.find(t => t.id === storyTemplate)?.name || t('t_grpz')}</span>
                     </div>
                   )}
                 </div>
@@ -395,21 +395,21 @@ export function CreatePage() {
                   className="flex items-center gap-1.5 text-xs text-slate-500 hover:text-slate-300 transition"
                 >
                   {showAdvanced ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
-                  高级设置（模型配置）
+                  {t('btn_advanced_settings')}
                 </button>
                 {showAdvanced && (
                   <div className="mt-3 grid grid-cols-1 md:grid-cols-3 gap-3">
                     <div>
-                      <div className="text-xs text-slate-500 mb-1">大纲模型</div>
-                      <Input value={modelOutline} onChange={(e) => setModelOutline(e.target.value)} placeholder="输入模型名" />
+                      <div className="text-xs text-slate-500 mb-1">{t('t_brvn05')}</div>
+                      <Input value={modelOutline} onChange={(e) => setModelOutline(e.target.value)} placeholder={t("t_3u1hsh")} />
                     </div>
                     <div>
-                      <div className="text-xs text-slate-500 mb-1">正文模型</div>
-                      <Input value={modelChapter} onChange={(e) => setModelChapter(e.target.value)} placeholder="输入模型名" />
+                      <div className="text-xs text-slate-500 mb-1">{t('t_dyzk7i')}</div>
+                      <Input value={modelChapter} onChange={(e) => setModelChapter(e.target.value)} placeholder={t("t_3u1hsh")} />
                     </div>
                     <div>
-                      <div className="text-xs text-slate-500 mb-1">润色模型</div>
-                      <Input value={modelPolish} onChange={(e) => setModelPolish(e.target.value)} placeholder="输入模型名" />
+                      <div className="text-xs text-slate-500 mb-1">{t('t_edhr12')}</div>
+                      <Input value={modelPolish} onChange={(e) => setModelPolish(e.target.value)} placeholder={t("t_3u1hsh")} />
                     </div>
                   </div>
                 )}
@@ -417,19 +417,19 @@ export function CreatePage() {
 
               <div className="flex justify-between pt-2">
                 <Button variant="default" onClick={() => setStep(1)}>
-                  <ArrowLeft size={16} /> 上一步
+                  <ArrowLeft size={16} /> {t('btn_prev')}
                 </Button>
                 <Button variant="primary" size="lg" onClick={handleStart} disabled={starting} className="!bg-sky-500 hover:!bg-sky-400 !text-white">
                   <Rocket size={18} />
-                  {starting ? '创作中...' : '开始创作'}
+                  {starting ? t('status_creating') : t('btn_start_creation')}
                 </Button>
               </div>
 
               {status && (
-                <div className={`text-sm p-3 rounded-lg border ${status.includes('错误') ? 'bg-red-500/10 border-red-500/20 text-red-300' : 'text-slate-400'}`}>
+                <div className={`text-sm p-3 rounded-lg border ${status.toLowerCase().includes('error') ? 'bg-red-500/10 border-red-500/20 text-red-300' : 'text-slate-400'}`}>
                   {status}
-                  {status.includes('模型配置') && (
-                    <Link to="/settings" className="ml-2 text-sky-400 hover:text-sky-300 underline text-xs">前往设置 →</Link>
+                  {status.toLowerCase().includes('model config') && (
+                    <Link to="/settings" className="ml-2 text-sky-400 hover:text-sky-300 underline text-xs">{t('link_go_settings')}</Link>
                   )}
                 </div>
               )}
@@ -437,7 +437,7 @@ export function CreatePage() {
               {/* 步骤进度 */}
               {steps.length > 0 && (
                 <div className="mt-3 space-y-1.5">
-                  <div className="text-xs text-slate-500 font-medium">创作流程</div>
+                  <div className="text-xs text-slate-500 font-medium">{t('t_aoyuyz')}</div>
                   <div className="flex flex-wrap gap-2">
                     {steps.map((s) => (
                       <div key={s.step} className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs border ${
@@ -460,7 +460,7 @@ export function CreatePage() {
 
               {streamText && (
                 <div className="mt-3 p-4 rounded-xl bg-slate-900/60 border border-slate-800/60 max-h-[300px] overflow-y-auto">
-                  <div className="text-xs text-slate-500 mb-2">AI 正在创作中...</div>
+                  <div className="text-xs text-slate-500 mb-2">{t('ai_')}</div>
                   <pre className="text-xs text-slate-300 whitespace-pre-wrap">{streamText}</pre>
                 </div>
               )}
@@ -475,35 +475,35 @@ export function CreatePage() {
               <FileText size={20} className="text-amber-400" />
             </div>
             <div>
-              <h2 className="text-lg font-bold text-slate-100">导入已有作品</h2>
-              <p className="text-xs text-slate-500">粘贴小说正文，系统自动按章节切分</p>
+              <h2 className="text-lg font-bold text-slate-100">{t('t_r45r8b')}</h2>
+              <p className="text-xs text-slate-500">{t('t_mjum')}</p>
             </div>
           </div>
           <div className="space-y-4">
             <div>
-              <label className="block text-sm text-slate-300 mb-1.5">小说标题</label>
-              <Input value={importTitle} onChange={(e) => setImportTitle(e.target.value)} placeholder="例如：斗破苍穹" />
+              <label className="block text-sm text-slate-300 mb-1.5">{t('t_c70lx2')}</label>
+              <Input value={importTitle} onChange={(e) => setImportTitle(e.target.value)} placeholder={t('ph_title_example')} />
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div>
-                <label className="block text-sm text-slate-300 mb-1.5">平台风格</label>
+                <label className="block text-sm text-slate-300 mb-1.5">{t('t_c9w1qj')}</label>
                 <select value={platformStyle} onChange={(e) => setPlatformStyle(e.target.value)} className="w-full px-3 py-2 rounded-lg border border-slate-600 bg-slate-900/60 text-slate-50 text-sm">
                   {platformStyles.map((s, i) => <option key={s.name + '-' + i} value={s.name}>{s.name}</option>)}
                 </select>
               </div>
               <div>
-                <label className="block text-sm text-slate-300 mb-1.5">作者风格</label>
+                <label className="block text-sm text-slate-300 mb-1.5">{t('t_ajtvdj')}</label>
                 <select value={authorStyle} onChange={(e) => setAuthorStyle(e.target.value)} className="w-full px-3 py-2 rounded-lg border border-slate-600 bg-slate-900/60 text-slate-50 text-sm">
                   {authorStyles.map((s, i) => <option key={s.name + '-' + i} value={s.name}>{s.name}</option>)}
                 </select>
               </div>
             </div>
             <div>
-              <label className="block text-sm text-slate-300 mb-1.5">完整正文</label>
-              <Textarea value={importContent} onChange={(e) => setImportContent(e.target.value)} placeholder="粘贴小说完整正文，系统会自动按章节切分..." />
+              <label className="block text-sm text-slate-300 mb-1.5">{t('t_bz28rw')}</label>
+              <Textarea value={importContent} onChange={(e) => setImportContent(e.target.value)} placeholder={t("t_bz28rw")} />
             </div>
             <Button variant="accent" onClick={handleImport} disabled={importing}>
-              <FileText size={14} /> {importing ? '导入中...' : '导入小说'}
+              <FileText size={14} /> {importing ? t('status_importing') : t('btn_import_novel')}
             </Button>
           </div>
         </Card>

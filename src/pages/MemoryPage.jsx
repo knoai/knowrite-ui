@@ -3,8 +3,10 @@ import { useParams } from 'react-router-dom';
 import { Card, CardHeader, CardTitle } from '../components/ui/Card';
 import { Button } from '../components/ui/Button';
 import * as api from '../api/novel';
+import { useI18n } from '../contexts/I18nContext';
 
 export function MemoryPage() {
+  const { t } = useI18n();
   const { workId } = useParams();
   const [loading, setLoading] = useState(true);
   const [voiceFps, setVoiceFps] = useState([]);
@@ -60,7 +62,7 @@ export function MemoryPage() {
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
-        <h2 className="text-lg font-bold text-slate-100">记忆系统</h2>
+        <h2 className="text-lg font-bold text-slate-100">{t('t_i0wlp6')}</h2>
         <Button variant="ghost" size="sm" onClick={handleRefresh} disabled={refreshing}>
           {refreshing ? '刷新中...' : '刷新记忆'}
         </Button>
@@ -75,12 +77,12 @@ export function MemoryPage() {
       {/* 声纹指纹 */}
       <Card>
         <CardHeader>
-          <CardTitle className="text-base">角色声纹指纹</CardTitle>
-          <p className="text-xs text-slate-500 mt-1">从已写章节中自动提取的各角色语言风格统计。</p>
+          <CardTitle className="text-base">{t('t_11epkaj')}</CardTitle>
+          <p className="text-xs text-slate-500 mt-1">{t('t_ovffp7')}</p>
         </CardHeader>
         <div className="px-4 pb-4">
           {voiceFps.length === 0 ? (
-            <div className="text-sm text-slate-500 py-4">暂无声纹数据。继续创作章节后，系统会自动提取。</div>
+            <div className="text-sm text-slate-500 py-4">{t('t_mjum')}</div>
           ) : (
             <div className="space-y-3">
               {voiceFps.map((fp) => (
@@ -92,25 +94,25 @@ export function MemoryPage() {
                   <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-xs">
                     {fp.avgSentenceLength && (
                       <div className="bg-slate-900 rounded px-2 py-1">
-                        <span className="text-slate-500">平均句长</span>
+                        <span className="text-slate-500">{t('t_ca26pa')}</span>
                         <span className="text-slate-200 ml-1">{fp.avgSentenceLength.toFixed(1)}</span>
                       </div>
                     )}
                     {fp.dialogueRatio !== undefined && (
                       <div className="bg-slate-900 rounded px-2 py-1">
-                        <span className="text-slate-500">对话占比</span>
+                        <span className="text-slate-500">{t('t_c6ibug')}</span>
                         <span className="text-slate-200 ml-1">{(fp.dialogueRatio * 100).toFixed(1)}%</span>
                       </div>
                     )}
                     {fp.vocabularyRichness && (
                       <div className="bg-slate-900 rounded px-2 py-1">
-                        <span className="text-slate-500">词汇丰富度</span>
+                        <span className="text-slate-500">{t('t_7n3zkg')}</span>
                         <span className="text-slate-200 ml-1">{fp.vocabularyRichness.toFixed(3)}</span>
                       </div>
                     )}
                     {fp.emotionIntensity && (
                       <div className="bg-slate-900 rounded px-2 py-1">
-                        <span className="text-slate-500">情感强度</span>
+                        <span className="text-slate-500">{t('t_cm302u')}</span>
                         <span className="text-slate-200 ml-1">{fp.emotionIntensity.toFixed(2)}</span>
                       </div>
                     )}
@@ -134,12 +136,12 @@ export function MemoryPage() {
       {/* 角色记忆 */}
       <Card>
         <CardHeader>
-          <CardTitle className="text-base">角色 episodic 记忆</CardTitle>
-          <p className="text-xs text-slate-500 mt-1">角色在各章节中的关键事件、成长弧线和情感变化。</p>
+          <CardTitle className="text-base">{t('_episodic_')}</CardTitle>
+          <p className="text-xs text-slate-500 mt-1">{t('t_o5pc')}</p>
         </CardHeader>
         <div className="px-4 pb-4">
           {memories.length === 0 ? (
-            <div className="text-sm text-slate-500 py-4">暂无角色记忆。系统会在章节总结后自动提取。</div>
+            <div className="text-sm text-slate-500 py-4">{t('t_o5pc')}</div>
           ) : (
             <div className="space-y-3">
               {memories.map((m, idx) => (
@@ -148,7 +150,7 @@ export function MemoryPage() {
                     <span className="text-sm font-semibold text-emerald-400">{m.charName}</span>
                     <span className="text-xs text-slate-500">第 {m.chapterRange} 章</span>
                   </div>
-                  <div className="text-xs text-slate-400 mb-1">类型: {m.episodeType}</div>
+                  <div className="text-xs text-slate-400 mb-1">{t('t_lnjk')}</div>
                   <div className="text-sm text-slate-300 whitespace-pre-wrap">{m.content}</div>
                   {m.tags && m.tags.length > 0 && (
                     <div className="mt-2 flex flex-wrap gap-1">
@@ -170,8 +172,8 @@ export function MemoryPage() {
       {skill && (
         <Card>
           <CardHeader>
-            <CardTitle className="text-base">技能注入</CardTitle>
-            <p className="text-xs text-slate-500 mt-1">基于高评分章节自动提取的写作技巧，已注入到后续章节的创作提示中。</p>
+            <CardTitle className="text-base">{t('t_cyo5oa')}</CardTitle>
+            <p className="text-xs text-slate-500 mt-1">{t('t_ebc3')}</p>
           </CardHeader>
           <div className="px-4 pb-4">
             <div className="bg-slate-800/50 rounded-lg p-4 border border-slate-700/40">

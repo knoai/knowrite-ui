@@ -4,10 +4,12 @@ import { Card, CardHeader, CardTitle } from '../ui/Card';
 import { Input, Textarea } from '../ui/Input';
 import { Modal } from './Modal';
 import * as api from '../../api/novel';
+import { useI18n } from '../../contexts/I18nContext';
 
 const CATEGORIES = ['力量体系', '种族/物种', '势力/宗门', '历史事件', '规则/法则', '道具/宝物', '地理区域', '其他'];
 
 export function WorldLorePanel({ workId }) {
+  const { t } = useI18n();
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(false);
   const [modalOpen, setModalOpen] = useState(false);
@@ -58,13 +60,13 @@ export function WorldLorePanel({ workId }) {
   return (
     <div className="space-y-4">
       <CardHeader className="!mb-0">
-        <CardTitle className="flex items-center gap-2"><BookOpen size={16} /> 世界观记忆库</CardTitle>
+        <CardTitle className="flex items-center gap-2"><BookOpen size={16} />{t('t_1w131v5')}</CardTitle>
         <button onClick={openCreate} className="flex items-center gap-1 text-sm px-3 py-1.5 rounded-lg bg-sky-600 hover:bg-sky-500 text-white transition">
           <Plus size={14} /> 新增
         </button>
       </CardHeader>
 
-      {loading && <div className="text-slate-400 text-sm py-4">加载中...</div>}
+      {loading && <div className="text-slate-400 text-sm py-4">{t('t_27k1ha')}</div>}
 
       {Object.entries(byCategory).map(([cat, catItems]) => (
         <div key={cat} className="mb-4">
@@ -76,7 +78,7 @@ export function WorldLorePanel({ workId }) {
                   <div className="min-w-0">
                     <div className="flex items-center gap-2">
                       <span className="font-medium text-slate-200 text-sm">{item.title}</span>
-                      {item.importance >= 4 && <span className="text-[10px] px-1.5 py-0.5 rounded bg-red-500/20 text-red-400">重要</span>}
+                      {item.importance >= 4 && <span className="text-[10px] px-1.5 py-0.5 rounded bg-red-500/20 text-red-400">{t('t_pjys')}</span>}
                     </div>
                     <p className="text-xs text-slate-400 mt-1 line-clamp-3">{item.content}</p>
                     {item.tags?.length > 0 && (
@@ -104,26 +106,26 @@ export function WorldLorePanel({ workId }) {
 
       <Modal open={modalOpen} onClose={() => setModalOpen(false)} title={editing ? '编辑世界观条目' : '新增世界观条目'} onConfirm={handleSave} confirmDisabled={!form.title}>
         <div>
-          <label className="text-xs text-slate-400 mb-1 block">分类</label>
+          <label className="text-xs text-slate-400 mb-1 block">{t('t_emut')}</label>
           <select value={form.category} onChange={e => setForm({ ...form, category: e.target.value })} className="w-full px-3 py-2 rounded-lg border border-slate-600 bg-slate-900/60 text-slate-50 text-sm">
             {CATEGORIES.map(c => <option key={c} value={c}>{c}</option>)}
           </select>
         </div>
         <div>
-          <label className="text-xs text-slate-400 mb-1 block">标题</label>
+          <label className="text-xs text-slate-400 mb-1 block">{t('t_ij5d')}</label>
           <Input value={form.title} onChange={e => setForm({ ...form, title: e.target.value })} placeholder="如：灵气修炼体系" />
         </div>
         <div>
-          <label className="text-xs text-slate-400 mb-1 block">内容</label>
-          <Textarea value={form.content} onChange={e => setForm({ ...form, content: e.target.value })} placeholder="详细描述..." />
+          <label className="text-xs text-slate-400 mb-1 block">{t('t_edas')}</label>
+          <Textarea value={form.content} onChange={e => setForm({ ...form, content: e.target.value })} placeholder={t("t_rcl68j")} />
         </div>
         <div className="flex gap-3">
           <div className="flex-1">
-            <label className="text-xs text-slate-400 mb-1 block">标签（逗号分隔）</label>
-            <Input value={form.tags} onChange={e => setForm({ ...form, tags: e.target.value })} placeholder="修仙, 灵根, 境界" />
+            <label className="text-xs text-slate-400 mb-1 block">{t('t_idef')}</label>
+            <Input value={form.tags} onChange={e => setForm({ ...form, tags: e.target.value })} placeholder={t("__")} />
           </div>
           <div className="w-24">
-            <label className="text-xs text-slate-400 mb-1 block">重要度 {form.importance}</label>
+            <label className="text-xs text-slate-400 mb-1 block">{t('t_pjys')}</label>
             <input type="range" min={1} max={5} value={form.importance} onChange={e => setForm({ ...form, importance: parseInt(e.target.value) })} className="w-full accent-sky-500" />
           </div>
         </div>

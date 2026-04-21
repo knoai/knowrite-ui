@@ -3,8 +3,10 @@ import { Plus, Trash2, Sparkles, ExternalLink } from 'lucide-react';
 import { CardHeader, CardTitle } from '../ui/Card';
 import * as api from '../../api/novel';
 import { useNavigate } from 'react-router-dom';
+import { useI18n } from '../../contexts/I18nContext';
 
 export function TemplatePanel({ workId }) {
+  const { t } = useI18n();
   const [applied, setApplied] = useState([]);
   const [globalTemplates, setGlobalTemplates] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -42,17 +44,17 @@ export function TemplatePanel({ workId }) {
   return (
     <div className="space-y-4">
       <CardHeader className="!mb-0">
-        <CardTitle className="flex items-center gap-2"><Sparkles size={16} /> 套路模版</CardTitle>
+        <CardTitle className="flex items-center gap-2"><Sparkles size={16} />{t('t_buysan')}</CardTitle>
         <button onClick={() => navigate('/templates')} className="flex items-center gap-1 text-sm px-3 py-1.5 rounded-lg bg-slate-700 hover:bg-slate-600 text-slate-200 transition">
           <ExternalLink size={14} /> 管理库
         </button>
       </CardHeader>
 
-      {loading && <div className="text-slate-400 text-sm py-4">加载中...</div>}
+      {loading && <div className="text-slate-400 text-sm py-4">{t('t_27k1ha')}</div>}
 
       {/* 已应用套路 */}
       <div>
-        <h4 className="text-xs font-medium text-sky-400 mb-2">已应用套路</h4>
+        <h4 className="text-xs font-medium text-sky-400 mb-2">{t('t_1afyohu')}</h4>
         {applied.length > 0 ? (
           <div className="space-y-2">
             {applied.map(t => (
@@ -83,14 +85,14 @@ export function TemplatePanel({ workId }) {
             ))}
           </div>
         ) : (
-          <div className="text-sm text-slate-500 py-3 bg-slate-900/20 rounded-lg border border-dashed border-slate-700 text-center">尚未应用任何套路</div>
+          <div className="text-sm text-slate-500 py-3 bg-slate-900/20 rounded-lg border border-dashed border-slate-700 text-center">{t('t_1ilbkly')}</div>
         )}
       </div>
 
       {/* 可选套路 */}
       {available.length > 0 && (
         <div>
-          <h4 className="text-xs font-medium text-sky-400 mb-2">从库中选择</h4>
+          <h4 className="text-xs font-medium text-sky-400 mb-2">{t('t_yriaig')}</h4>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
             {available.map(t => (
               <div key={t.id} className="bg-slate-900/20 border border-slate-700/30 rounded-lg p-3 hover:border-sky-500/30 transition group">
