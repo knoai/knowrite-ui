@@ -1,8 +1,8 @@
 <p align="center">
-  <img src="https://img.shields.io/badge/Knowrite_UI-小说创作工作台-6366f1?style=for-the-badge&logo=react&logoColor=white" alt="Knowrite UI">
+  <img src="https://img.shields.io/badge/Knowrite_UI-Novel%20Writing%20Studio-6366f1?style=for-the-badge&logo=react&logoColor=white" alt="Knowrite UI">
 </p>
 
-<h1 align="center">Knowrite 小说创作工作台<br><sub>Novel Writing Studio · React + Vite</sub></h1>
+<h1 align="center">Knowrite Novel Writing Studio<br><sub>Novel Writing Studio · React + Vite</sub></h1>
 
 <p align="center">
   <a href="#"><img src="https://img.shields.io/badge/React-19-61DAFB?logo=react&logoColor=white" alt="React"></a>
@@ -13,212 +13,212 @@
 </p>
 
 <p align="center">
-  <a href="README.md">中文</a> | <a href="README.en.md">English</a>
+  <a href="README.md">English</a> | <a href="README.zh.md">简体中文</a>
 </p>
 
 ---
 
-AI 驱动的小说创作可视化工作台——实时观看 7 个 Agent 协作写小说，Fitness 质量评分一目了然，世界观一键管理。基于 React 19 + Vite + Tailwind CSS v4 构建，MIT 协议开源。
+AI-driven novel creation visualization workbench — watch 7 Agents collaborate to write a novel in real-time, with Fitness quality scores at a glance and one-click world-building management. Built with React 19 + Vite + Tailwind CSS v4, open-sourced under MIT license.
 
-**Knowrite UI** 是 [`knowrite`](https://github.com/knoai/knowrite) 小说创作引擎的配套前端，通过标准 HTTP / SSE 连接后端，零配置联调，开箱即用。
+**Knowrite UI** is the companion frontend for the [`knowrite`](https://github.com/knoai/knowrite) novel writing engine, connecting to the backend via standard HTTP / SSE, zero-config dev environment, ready to use out of the box.
 
-> **模型配置**：前端不再内置任何默认 Provider 或模型。用户需在「设置 → 模型配置」中自行添加 OpenAI 兼容的 Provider（如百炼、DeepSeek、Ollama 等），填写 Base URL、API Key 和模型列表后，系统即可调用。
+> **Model Configuration**: The frontend no longer has any built-in default Provider or model. Users must add their own OpenAI-compatible Provider in "Settings → Model Config" (e.g. Bailian, DeepSeek, Ollama, etc.), fill in Base URL, API Key, and model list, then assign models to each role.
 
 ---
 
-## 快速开始
+## Quick Start
 
-### 环境要求
+### Requirements
 
 - Node.js 24+
-- 后端服务 [`knowrite`](https://github.com/knoai/knowrite) 已启动（默认 `http://localhost:8000`）
-- ⚠️ **首次使用必须先配置模型**：打开「设置 → 模型配置」，添加 Provider 并为各角色分配模型
+- Backend service [`knowrite`](https://github.com/knoai/knowrite) running (default `http://localhost:8000`)
+- ⚠️ **First-time setup: You MUST configure models first**: Open "Settings → Model Config", add a Provider and assign models to each role
 
-### 安装
+### Installation
 
 ```bash
-# 克隆前端仓库
+# Clone frontend repo
 git clone https://github.com/knoai/knowrite-ui.git
 cd knowrite-ui
 
-# 安装依赖
+# Install dependencies
 npm install
 
-# 启动开发服务器
+# Start dev server
 npm run dev
-# 前端运行在 http://localhost:5173，自动代理到后端
+# Frontend runs at http://localhost:5173, auto-proxies to backend
 ```
 
-### 环境变量
+### Environment Variables
 
 ```bash
-# 复制环境变量模板
+# Copy environment variable template
 cp .env.example .env
 ```
 
-| 变量 | 说明 | 默认值 |
-|------|------|--------|
-| `VITE_API_BASE` | 后端 API 地址 | `http://localhost:8000` |
-| `VITE_AUTH_TOKEN` | 认证令牌（如后端启用了 AUTH_TOKEN） | — |
+| Variable | Description | Default |
+|----------|-------------|---------|
+| `VITE_API_BASE` | Backend API address | `http://localhost:8000` |
+| `VITE_AUTH_TOKEN` | Auth token (if backend has AUTH_TOKEN enabled) | — |
 
 ```
 VITE_API_BASE=http://localhost:8000
 VITE_AUTH_TOKEN=your-token-here
 ```
 
-### 生产构建
+### Production Build
 
 ```bash
-npm run build        # 输出到 dist/ 目录
-npm run preview      # 预览生产构建
+npm run build        # Output to dist/ directory
+npm run preview      # Preview production build
 ```
 
-构建产物为纯静态 SPA，可通过任意 CDN / Nginx / 后端 serve 部署。
+The build output is a pure static SPA, deployable via any CDN / Nginx / backend serve.
 
 ---
 
-## 核心功能
+## Core Features
 
-### 实时创作流可视化
+### Real-Time Creation Flow Visualization
 
-SSE 流式展示 Writer → Editor → Humanizer → Proofreader → Reader → Summarizer 的完整协作过程：
+SSE streaming display of the complete Writer → Editor → Humanizer → Proofreader → Reader → Summarizer collaboration process:
 
-- **Agent 状态看板**：实时显示每个 Agent 的执行状态和输出内容
-- **流式文本渲染**：Writer 的初稿逐字流入，Editor 的评审意见即时呈现
-- **编辑循环追踪**：Editor 改稿轮次、通过率、历史意见对比
-- **一键重试**：任意 Agent 步骤失败后，可单独重试该步骤
+- **Agent Status Dashboard**: Real-time display of each Agent's execution status and output content
+- **Streaming text rendering**: Writer's draft flows in word by word, Editor's review comments appear instantly
+- **Edit loop tracking**: Editor revision rounds, pass rate, historical comment comparison
+- **One-click retry**: If any Agent step fails, you can retry that step individually
 
-### Fitness 质量看板
+### Fitness Quality Dashboard
 
-每章完成后自动展示五维质量雷达图：
+Automatically displays five-dimensional quality radar chart after each chapter:
 
-| 维度 | 展示内容 |
-|------|----------|
-| **字数** | 目标 vs 实际字数对比、偏差柱状图 |
-| **重复** | 与历史章节的内容重复热力图 |
-| **评审** | Editor 各维度通过/未通过清单 |
-| **读者** | 模拟读者反馈评分（沉浸感 / 节奏 / 角色认同） |
-| **连贯** | 大纲偏离检测严重度（low/medium/high） |
+| Dimension | Display Content |
+|-----------|-----------------|
+| **Word Count** | Target vs actual word count comparison, deviation bar chart |
+| **Repetition** | Content repetition heatmap with historical chapters |
+| **Review** | Editor dimension-level pass/fail checklist |
+| **Reader** | Simulated reader feedback score (immersion / pacing / character identification) |
+| **Coherence** | Outline deviation detection severity (low/medium/high) |
 
-支持章节间 Fitness 趋势对比，快速定位质量下滑点。
+Supports inter-chapter Fitness trend comparison for quickly locating quality drops.
 
-### 作品与章节管理
+### Work & Chapter Management
 
-- **作品列表**：全部作品卡片，显示当前进度、最新 Fitness 均分、卷数
-- **新建作品**：选择题材风格（番茄/起点/飞卢）、创作策略（knowrite/pipeline）、目标模型
-- **章节详情**：多版本切换（raw / edited / humanized / final），逐版本 diff 对比
-- **评审记录**：Editor 每轮评审的结构化展示，维度级通过/失败标记
+- **Work list**: All work cards, showing current progress, latest Fitness average, volume count
+- **New work**: Choose genre style (Fanqie/Qidian/Feilu), creation strategy (knowrite/pipeline), target model
+- **Chapter details**: Multi-version switching (raw / edited / humanized / final), per-version diff comparison
+- **Review records**: Structured display of Editor's per-round review results with dimension-level pass/fail markers
 
-### 世界观可视化编辑
+### World-Building Visual Editor
 
-完整的作品世界观管理面板：
+Complete work worldview management panel:
 
-| 实体 | 功能 |
-|------|------|
-| **人物卡** | 角色档案（姓名/身份/外貌/性格/关系网络）、关系图谱 |
-| **剧情线** | 主线/支线结构树，节点状态追踪（未开始/进行中/已完成） |
-| **地图** | 区域绘制、连通关系、势力分布 |
-| **设定 Lore** | 世界观条目、历史事件、势力设定、规则体系 |
+| Entity | Function |
+|--------|----------|
+| **Character Cards** | Character profiles (name/identity/appearance/personality/relationship network), relationship graph |
+| **Plot Lines** | Main/sub-plot structure tree, node status tracking (not started / in progress / completed) |
+| **Map** | Region drawing, connectivity relationships, force distribution |
+| **Lore** | Worldview entries, historical events, force settings, rule systems |
 
-所有数据通过 REST API 实时同步后端 SQLite 数据库，写作时自动注入 Agent 上下文。
+All data is synced to the backend SQLite database via REST API in real-time, automatically injected into Agent context during writing.
 
-### Prompt 管理与实验
+### Prompt Management & Experimentation
 
-- **模板浏览**：查看 Writer / Editor / Summarizer 等所有 Prompt 模板
-- **自定义规则**：覆盖默认 Prompt，注入个人创作偏好
-- **Prompt 进化实验**：选择历史低分章节，一键运行 Prompt 变体实验，对比 Fitness 提升
+- **Template browsing**: View all Prompt templates for Writer / Editor / Summarizer etc.
+- **Custom rules**: Override default Prompts, inject personal creative preferences
+- **Prompt evolution experiment**: Select historical low-score chapters, one-click run Prompt variant experiment, compare Fitness improvement
 
-### 设置中心
+### Settings Center
 
-- **模型配置**：完全自定义 Provider（任意 OpenAI 兼容接口），为 Writer/Editor/Humanizer 等角色分配专属模型，支持多模型轮换
-- **评审维度**：开关 Editor 评审维度（工业风 33 项 / 自由风 3 项）
-- **作者风格库**：导入/管理作者风格指纹，写作时自动注入
-- **引擎参数**：上下文窗口、编辑轮次、截断限制等高级调参
-
----
-
-## 页面结构
-
-| 路由 | 功能 | 核心对接 API |
-|------|------|-------------|
-| `/` | 作品列表 | `GET /api/novel/works` |
-| `/create` | 新建作品 | `POST /api/novel/start` (SSE) |
-| `/works/:workId` | 作品详情（章节列表、Fitness 看板、评审记录） | `GET /api/novel/works/:workId` |
-| `/works/:workId/chapter/:num` | 章节阅读（多版本切换 + diff 对比） | `GET /api/novel/works/:workId` |
-| `/works/:workId/write` | 续写下一章（实时创作流） | `POST /api/novel/continue` (SSE) |
-| `/settings` | 全局设置（模型/维度/风格/引擎参数） | `GET/POST /api/settings` |
-| `/world/:workId` | 世界观面板（人物/剧情线/地图/lore） | `GET/POST/PUT/DELETE /api/world/...` |
-| `/templates` | 套路模板管理 | `GET/POST /api/templates` |
-| `/prompts` | Prompt 模板浏览与实验 | `GET /api/prompts`, `POST /api/evolve` |
+- **Model Config**: Fully custom Provider (any OpenAI-compatible interface), assign dedicated models for Writer/Editor/Humanizer etc. roles, support multi-model rotation
+- **Review Dimensions**: Toggle Editor review dimensions (industrial mode 33 items / free mode 3 items)
+- **Author Style Library**: Import/manage author style fingerprints, auto-injected during writing
+- **Engine Parameters**: Context window, edit rounds, truncation limits and other advanced tuning
 
 ---
 
-## 技术栈
+## Page Structure
 
-| 层 | 技术 |
-|---|---|
-| 框架 | React 19 |
-| 构建工具 | Vite 6 |
-| 路由 | react-router-dom v7 |
-| 样式 | Tailwind CSS v4 |
-| 图标 | lucide-react |
-| 状态管理 | React Hooks + Context |
-| 数据请求 | 原生 fetch + EventSource (SSE) |
-| 构建输出 | SPA（单页应用） |
-| 协议 | MIT |
+| Route | Function | Core API |
+|-------|----------|----------|
+| `/` | Work list | `GET /api/novel/works` |
+| `/create` | New work | `POST /api/novel/start` (SSE) |
+| `/works/:workId` | Work details (chapter list, Fitness dashboard, review records) | `GET /api/novel/works/:workId` |
+| `/works/:workId/chapter/:num` | Chapter reader (multi-version switching + diff comparison) | `GET /api/novel/works/:workId` |
+| `/works/:workId/write` | Continue next chapter (real-time creation flow) | `POST /api/novel/continue` (SSE) |
+| `/settings` | Global settings (models/dimensions/style/engine params) | `GET/POST /api/settings` |
+| `/world/:workId` | Worldview panel (characters/plotlines/maps/lore) | `GET/POST/PUT/DELETE /api/world/...` |
+| `/templates` | Template pattern management | `GET/POST /api/templates` |
+| `/prompts` | Prompt template browsing and experimentation | `GET /api/prompts`, `POST /api/evolve` |
 
 ---
 
-## 项目结构
+## Tech Stack
+
+| Layer | Technology |
+|-------|-----------|
+| Framework | React 19 |
+| Build Tool | Vite 6 |
+| Routing | react-router-dom v7 |
+| Styling | Tailwind CSS v4 |
+| Icons | lucide-react |
+| State Management | React Hooks + Context |
+| Data Fetching | Native fetch + EventSource (SSE) |
+| Build Output | SPA (Single Page Application) |
+| License | MIT |
+
+---
+
+## Project Structure
 
 ```
 knowrite-ui/
 ├── src/
-│   ├── pages/           # 页面组件
-│   │   ├── Home.jsx           # 作品列表
-│   │   ├── CreateWork.jsx     # 新建作品
-│   │   ├── WorkDetail.jsx     # 作品详情 + Fitness 看板
-│   │   ├── ChapterViewer.jsx  # 章节阅读（多版本切换）
-│   │   ├── WriteStream.jsx    # 实时创作流（SSE）
-│   │   ├── Settings.jsx       # 全局设置
-│   │   ├── WorldPanel.jsx     # 世界观面板
-│   │   ├── Templates.jsx      # 套路模板管理
-│   │   └── PromptLab.jsx      # Prompt 实验
-│   ├── components/      # 可复用 UI 组件
-│   │   ├── FitnessRadar.jsx   # Fitness 雷达图
-│   │   ├── AgentStatus.jsx    # Agent 状态卡片
-│   │   ├── CharacterCard.jsx  # 人物卡
-│   │   ├── PlotTree.jsx       # 剧情线树形图
-│   │   └── MapCanvas.jsx      # 地图画布
-│   ├── api/             # API 封装
-│   │   ├── client.js          # fetch 封装 + 认证
-│   │   ├── sse.js             # EventSource 流式请求
-│   │   └── novel.js           # 小说相关 API
-│   ├── hooks/           # 自定义 React Hooks
-│   │   ├── useSSE.js          # SSE 流式数据 Hook
-│   │   ├── useFitness.js      # Fitness 数据 Hook
-│   │   └── useWorld.js        # 世界观数据 Hook
+│   ├── pages/           # Page components
+│   │   ├── Home.jsx           # Work list
+│   │   ├── CreateWork.jsx     # New work
+│   │   ├── WorkDetail.jsx     # Work details + Fitness dashboard
+│   │   ├── ChapterViewer.jsx  # Chapter reader (multi-version switching)
+│   │   ├── WriteStream.jsx    # Real-time creation flow (SSE)
+│   │   ├── Settings.jsx       # Global settings
+│   │   ├── WorldPanel.jsx     # Worldview panel
+│   │   ├── Templates.jsx      # Template pattern management
+│   │   └── PromptLab.jsx      # Prompt experiments
+│   ├── components/      # Reusable UI components
+│   │   ├── FitnessRadar.jsx   # Fitness radar chart
+│   │   ├── AgentStatus.jsx    # Agent status card
+│   │   ├── CharacterCard.jsx  # Character card
+│   │   ├── PlotTree.jsx       # Plotline tree
+│   │   └── MapCanvas.jsx      # Map canvas
+│   ├── api/             # API wrappers
+│   │   ├── client.js          # fetch wrapper + auth
+│   │   ├── sse.js             # EventSource streaming requests
+│   │   └── novel.js           # Novel-related APIs
+│   ├── hooks/           # Custom React Hooks
+│   │   ├── useSSE.js          # SSE streaming data Hook
+│   │   ├── useFitness.js      # Fitness data Hook
+│   │   └── useWorld.js        # Worldview data Hook
 │   ├── context/         # React Context
-│   │   └── AppContext.jsx     # 全局状态
-│   └── main.jsx         # 应用入口
-├── public/              # 静态资源
-├── index.html           # HTML 入口
-├── vite.config.js       # Vite 配置
-├── tailwind.config.js   # Tailwind 配置
-└── package.json         # 依赖清单
+│   │   └── AppContext.jsx     # Global state
+│   └── main.jsx         # App entry
+├── public/              # Static assets
+├── index.html           # HTML entry
+├── vite.config.js       # Vite config
+├── tailwind.config.js   # Tailwind config
+└── package.json         # Dependencies
 ```
 
 ---
 
-## 与后端的联调
+## Backend Integration
 
-前端使用标准 `fetch` 和 `EventSource` 连接后端，无需特殊代理配置：
+The frontend connects to the backend using standard `fetch` and `EventSource`, no special proxy config needed:
 
 ```javascript
-// 普通请求
+// Regular request
 fetch(`${apiBase}/api/novel/works/${workId}`)
 
-// SSE 流式请求（创作流水线）
+// SSE streaming request (creation pipeline)
 const source = new EventSource(`${apiBase}/api/novel/continue?workId=${workId}`)
 source.onmessage = (e) => {
   const data = JSON.parse(e.data)
@@ -226,23 +226,23 @@ source.onmessage = (e) => {
 }
 ```
 
-CORS 已在后端默认开启，前端可直接跨域调用。
+CORS is enabled by default on the backend, frontend can call cross-origin directly.
 
 ---
 
-## 部署方式
+## Deployment
 
-### 独立部署（推荐）
+### Standalone Deployment (Recommended)
 
 ```bash
 npm run build
-# 将 dist/ 目录部署到任意静态服务器
+# Deploy dist/ directory to any static server
 # Nginx / Vercel / Netlify / Cloudflare Pages / GitHub Pages
 ```
 
-### 前后端一体化部署
+### Integrated Frontend-Backend Deployment
 
-后端 `config/network.json` 中配置静态目录 serve 前端构建产物：
+Configure the backend `config/network.json` to serve the frontend build output as static files:
 
 ```json
 {
@@ -251,55 +251,55 @@ npm run build
 }
 ```
 
-启动后端后，访问 `http://localhost:8000` 即可使用完整应用。
+After starting the backend, visit `http://localhost:8000` to use the complete application.
 
 ---
 
-## 产品矩阵
+## Product Matrix
 
-Knowrite UI 是 knowrite 创作引擎的**小说创作场景界面**。引擎支持多场景复用：
+Knowrite UI is the **novel creation scenario interface** for the knowrite engine. The engine supports multi-scenario reuse:
 
-| 产品 | 前端仓库 | 场景 | 状态 |
-|------|----------|------|------|
-| **小说创作** | `knowrite-ui` | 长篇小说 / 网文 / IP 开发 | ✅ 已上线 |
-| **桌面版** | `knowrite-desktop`（分支） | Electron 桌面客户端，离线作品管理 | 🚧 分支开发中 |
-| **云文档** | `knowrite-docs`（规划） | 白皮书 / 技术文档 / 报告 | 🚧 规划中 |
-| **技术书籍** | `knowrite-techbook`（规划） | 技术教程 / 书籍 / 课程讲义 | 🚧 规划中 |
-| **SaaS 平台** | 统一管理后台 | 多租户 / 付费订阅 / 团队协作 | 🚧 规划中 |
+| Product | Frontend Repo | Scenario | Status |
+|---------|--------------|----------|--------|
+| **Novel Writing** | `knowrite-ui` | Long-form fiction / web novels / IP development | ✅ Live |
+| **Desktop** | `knowrite-desktop` (branch) | Electron desktop client, offline work management | 🚧 Branch in development |
+| **Cloud Docs** | `knowrite-docs` (planned) | White papers / technical docs / reports | 🚧 Planned |
+| **Tech Books** | `knowrite-techbook` (planned) | Technical tutorials / books / course materials | 🚧 Planned |
+| **SaaS Platform** | Unified admin backend | Multi-tenant / paid subscriptions / team collaboration | 🚧 Planned |
 
-所有前端共享同一套后端 API（`knowrite`），通过 `strategy` 参数切换不同创作模式。
-
----
-
-## 路线图
-
-- [x] 作品管理（创建 / 列表 / 详情）
-- [x] 实时创作流可视化（SSE Agent 状态看板）
-- [x] Fitness 质量看板（五维雷达图 + 趋势对比）
-- [x] 章节多版本阅读（raw / edited / humanized / final）
-- [x] 世界观可视化编辑（人物 / 剧情线 / 地图 / lore）
-- [x] Prompt 模板浏览与自定义
-- [x] 全局设置（模型 / 评审维度 / 作者风格 / 引擎参数）
-- [x] 模型配置完全用户自定义（动态 Provider/角色分配）
-- [ ] 章节 diff 对比视图
-- [ ] 创作数据统计面板（字数趋势 / 伏笔回收率 / 角色出场频率）
-- [ ] i18n 多语言支持（zh / en / ja）
-- [ ] 深色模式
-- [ ] 桌面版客户端（Electron 分支）
-- [ ] SaaS 多租户登录与权限管理
+All frontends share the same backend API (`knowrite`), switching different creation modes via the `strategy` parameter.
 
 ---
 
-## 参与贡献
+## Roadmap
 
-欢迎贡献代码、提 issue 或 PR。
+- [x] Work management (create / list / details)
+- [x] Real-time creation flow visualization (SSE Agent status dashboard)
+- [x] Fitness quality dashboard (five-dimensional radar chart + trend comparison)
+- [x] Chapter multi-version reading (raw / edited / humanized / final)
+- [x] World-building visual editor (characters / plotlines / maps / lore)
+- [x] Prompt template browsing and customization
+- [x] Global settings (models / review dimensions / author style / engine params)
+- [x] Fully user-defined model config (dynamic Provider/role assignment)
+- [ ] Chapter diff comparison view
+- [ ] Creation data statistics panel (word count trends / hook recovery rate / character appearance frequency)
+- [ ] i18n multi-language support (zh / en / ja)
+- [ ] Dark mode
+- [ ] Desktop client (Electron branch)
+- [ ] SaaS multi-tenant login and permission management
+
+---
+
+## Contributing
+
+Welcome code contributions, issues, and PRs.
 
 ```bash
 npm install
-npm run dev        # 开发模式（HMR 热更新）
-npm run build      # 生产构建
-npm run preview    # 预览生产构建
-npm run lint       # ESLint 检查
+npm run dev        # Development mode (HMR hot reload)
+npm run build      # Production build
+npm run preview    # Preview production build
+npm run lint       # ESLint check
 ```
 
 ---
@@ -308,12 +308,12 @@ npm run lint       # ESLint 检查
 
 **MIT License**
 
-- ✅ 可自由商用、修改、分发
-- ✅ 允许集成到商业产品
-- ✅ 允许二次开发后闭源
+- ✅ Free for commercial use, modification, and distribution
+- ✅ Allowed to integrate into commercial products
+- ✅ Allowed to develop derivatives and keep closed-source
 
-后端 [`knowrite`](https://github.com/knoai/knowrite) 采用 NC-1.0 协议（非商业个人使用），前端与后端协议分离，前端代码不受后端 NC-1.0 限制。
+Backend [`knowrite`](https://github.com/knoai/knowrite) uses the AGPL-3.0 license. The frontend and backend licenses are separate; frontend code is not restricted by the backend AGPL-3.0.
 
 ---
 
-> 后端仓库：[`knowrite`](https://github.com/knoai/knowrite)（NC-1.0）| 前端仓库：`knowrite-ui`（MIT）| 路线图：`docs/ROADMAP.md`
+> Backend repo: [`knowrite`](https://github.com/knoai/knowrite) (AGPL-3.0) | Frontend repo: `knowrite-ui` (MIT) | Roadmap: `docs/ROADMAP.md`
