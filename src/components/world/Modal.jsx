@@ -1,4 +1,7 @@
+import { useI18n } from '../../contexts/I18nContext';
+
 export function Modal({ open, onClose, title, children, onConfirm, confirmText = '保存', confirmDisabled = false }) {
+  const { t } = useI18n();
   if (!open) return null;
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm" onClick={onClose}>
