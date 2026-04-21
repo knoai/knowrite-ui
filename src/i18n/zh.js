@@ -1253,4 +1253,5 @@ export const zh = {
   'stage_summarizer_desc': '生成章节摘要',
   'stage_polish_label': '润色',
   'stage_polish_desc': '最终润色',
+  'label_language': '语言',
 };

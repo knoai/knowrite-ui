@@ -1253,4 +1253,5 @@ export const en = {
   'stage_summarizer_desc': 'Generate chapter summary',
   'stage_polish_label': 'Polish',
   'stage_polish_desc': 'Final polish',
+  'label_language': 'Language',
 };

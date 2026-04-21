@@ -6,6 +6,7 @@ import { Button } from '../components/ui/Button';
 import { Input, Textarea } from '../components/ui/Input';
 import { useToast } from '../components/ui/Toast';
 import { useI18n } from '../contexts/I18nContext';
+import { getStoredLang } from '../i18n';
 import * as api from '../api/novel';
 
 export function TryCreatePage() {
@@ -30,6 +31,7 @@ export function TryCreatePage() {
   const [authorStyle, setAuthorStyle] = useState('热血磅礴');
   const [strategy, setStrategy] = useState('pipeline');
   const [writingMode, setWritingMode] = useState('industrial');
+  const [language, setLanguage] = useState(() => getStoredLang());
   const [platformStyles, setPlatformStyles] = useState([]);
   const [authorStyles, setAuthorStyles] = useState([]);
   const [storyTemplates, setStoryTemplates] = useState([]);
@@ -95,6 +97,7 @@ export function TryCreatePage() {
       if (key === 'outline') {
         await api.tryCreateOutline({
           topic: topic.trim(), platformStyle, authorStyle, strategy, writingMode, storyTemplate: selectedTemplate || undefined,
+          language,
         }, (chunk) => {
           setStageState(prev => ({ ...prev, outline: { ...prev.outline, text: prev.outline.text + chunk } }));
         }, controller.signal, onEvent);

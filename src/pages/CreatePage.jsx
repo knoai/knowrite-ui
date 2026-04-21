@@ -6,6 +6,7 @@ import { Button } from '../components/ui/Button';
 import { Input, Textarea } from '../components/ui/Input';
 import { Stepper } from '../components/ui/Stepper';
 import { EmptyState } from '../components/ui/EmptyState';
+import { getStoredLang } from '../i18n';
 import { useWork } from '../contexts/WorkContext';
 import { useToast } from '../components/ui/Toast';
 import { useI18n } from '../contexts/I18nContext';
@@ -39,6 +40,7 @@ export function CreatePage() {
   const [authorStyle, setAuthorStyle] = useState('');
   const [strategy, setStrategy] = useState('pipeline');
   const [writingMode, setWritingMode] = useState('industrial');
+  const [language, setLanguage] = useState(() => getStoredLang());
   const [platformStyles, setPlatformStyles] = useState([]);
   const [authorStyles, setAuthorStyles] = useState([]);
   const [storyTemplates, setStoryTemplates] = useState([]);
@@ -77,6 +79,7 @@ export function CreatePage() {
     try {
       await api.startNovel({
         topic: topic.trim(), platformStyle, authorStyle, strategy, writingMode, storyTemplate: selectedTemplate || undefined,
+        language,
         customModels: { outline: modelOutline || undefined, chapter: modelChapter || undefined, polish: modelPolish || undefined }
       }, (chunk) => setStreamText(t => t + chunk), controller.signal, (ev) => {
         if (ev.type === 'stepStart') {
@@ -299,6 +302,25 @@ export function CreatePage() {
                       </button>
                     );
                   })}
+                </div>
+              </div>
+
+              {/* Language */}
+              <div>
+                <label className="block text-sm font-medium text-slate-200 mb-2">{t('label_language') || 'Language'}</label>
+                <div className="flex gap-2">
+                  <button
+                    onClick={() => setLanguage('zh')}
+                    className={`px-3 py-1.5 rounded-lg text-xs border transition ${language === 'zh' ? 'bg-sky-500/10 border-sky-500/40 text-sky-300' : 'bg-slate-800/30 border-slate-700/40 text-slate-400 hover:border-slate-600'}`}
+                  >
+                    中文
+                  </button>
+                  <button
+                    onClick={() => setLanguage('en')}
+                    className={`px-3 py-1.5 rounded-lg text-xs border transition ${language === 'en' ? 'bg-sky-500/10 border-sky-500/40 text-sky-300' : 'bg-slate-800/30 border-slate-700/40 text-slate-400 hover:border-slate-600'}`}
+                  >
+                    English
+                  </button>
                 </div>
               </div>
 
