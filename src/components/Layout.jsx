@@ -1,26 +1,29 @@
 import { NavLink, Outlet, useLocation } from 'react-router-dom';
-import { BookOpen, Library, Wrench, Settings, HelpCircle, ChevronDown, Bot, Sparkles, MessageCircle, Layers, FlaskConical, BookMarked, BrainCircuit, Activity, Lightbulb } from 'lucide-react';
+import { BookOpen, Library, Wrench, Settings, HelpCircle, Bot, Sparkles, MessageCircle, Layers, FlaskConical, BookMarked, BrainCircuit, Activity, Lightbulb } from 'lucide-react';
 import { useState } from 'react';
-
-const mainNav = [
-  { to: '/create', label: '开始创作', icon: BookOpen, desc: '新建或导入作品' },
-  { to: '/try-create', label: '尝试创作', icon: FlaskConical, desc: '渐进式体验创作流程' },
-  { to: '/works', label: '我的作品', icon: Library, desc: '管理已有作品' },
-];
-
-const toolNav = [
-  { to: '/chat', label: 'AI 对话', icon: MessageCircle },
-  { to: '/agent-chat', label: '对话创作', icon: Bot },
-  { to: '/plan', label: '章节预演', icon: Lightbulb },
-  { to: '/evolve', label: 'Prompt 进化', icon: Sparkles },
-  { to: '/templates', label: '套路库', icon: Layers },
-  { to: '/deconstruct', label: '拆书分析', icon: BookMarked },
-  { to: '/traces', label: 'Trace 调试', icon: Activity },
-];
+import { useI18n } from '../contexts/I18nContext';
+import { LanguageSwitcher } from './LanguageSwitcher';
 
 export function Layout() {
+  const { t } = useI18n();
   const [toolsOpen, setToolsOpen] = useState(false);
   const location = useLocation();
+
+  const mainNav = [
+    { to: '/create', label: t('nav_create'), icon: BookOpen, desc: t('nav_create_desc') },
+    { to: '/try-create', label: t('nav_try_create'), icon: FlaskConical, desc: t('nav_try_create_desc') },
+    { to: '/works', label: t('nav_works'), icon: Library, desc: t('nav_works_desc') },
+  ];
+
+  const toolNav = [
+    { to: '/chat', label: t('nav_chat'), icon: MessageCircle },
+    { to: '/agent-chat', label: t('nav_agent_chat'), icon: Bot },
+    { to: '/plan', label: t('nav_plan'), icon: Lightbulb },
+    { to: '/evolve', label: t('nav_evolve'), icon: Sparkles },
+    { to: '/templates', label: t('nav_templates'), icon: Layers },
+    { to: '/deconstruct', label: t('nav_deconstruct'), icon: BookMarked },
+    { to: '/traces', label: t('nav_traces'), icon: Activity },
+  ];
 
   const isToolsActive = toolNav.some(t => location.pathname.startsWith(t.to));
 
@@ -36,16 +39,16 @@ export function Layout() {
                 <Bot size={20} className="text-sky-400" />
               </div>
               <div>
-                <h1 className="text-base font-bold tracking-tight text-slate-50">AI 小说创作</h1>
-                <div className="text-[10px] text-slate-500">knowrite 工作台</div>
+                <h1 className="text-base font-bold tracking-tight text-slate-50">{t('app_title')}</h1>
+                <div className="text-[10px] text-slate-500">{t('app_subtitle')}</div>
               </div>
             </div>
           </div>
 
           <nav className="flex-1 overflow-auto px-3 pb-3 space-y-5">
-            {/* 核心导航 */}
+            {/* Core nav */}
             <div>
-              <div className="text-[10px] font-semibold text-slate-600 uppercase tracking-wider px-3 mb-1.5">创作</div>
+              <div className="text-[10px] font-semibold text-slate-600 uppercase tracking-wider px-3 mb-1.5">{t('nav_group_create')}</div>
               <div className="space-y-0.5">
                 {mainNav.map((item) => (
                   <NavLink
@@ -69,9 +72,9 @@ export function Layout() {
               </div>
             </div>
 
-            {/* 工具导航 */}
+            {/* Tool nav */}
             <div>
-              <div className="text-[10px] font-semibold text-slate-600 uppercase tracking-wider px-3 mb-1.5">工具</div>
+              <div className="text-[10px] font-semibold text-slate-600 uppercase tracking-wider px-3 mb-1.5">{t('nav_group_tools')}</div>
               <div className="space-y-0.5">
                 {toolNav.map((item) => (
                   <NavLink
@@ -92,9 +95,9 @@ export function Layout() {
               </div>
             </div>
 
-            {/* 设置 */}
+            {/* Settings */}
             <div>
-              <div className="text-[10px] font-semibold text-slate-600 uppercase tracking-wider px-3 mb-1.5">系统</div>
+              <div className="text-[10px] font-semibold text-slate-600 uppercase tracking-wider px-3 mb-1.5">{t('nav_group_system')}</div>
               <div className="space-y-0.5">
                 <NavLink
                   to="/settings"
@@ -107,7 +110,7 @@ export function Layout() {
                   }
                 >
                   <Settings size={16} className={location.pathname === '/settings' ? 'text-sky-400' : 'text-slate-500 group-hover:text-slate-300'} />
-                  <span>全局设置</span>
+                  <span>{t('nav_settings')}</span>
                 </NavLink>
                 <NavLink
                   to="/guide"
@@ -120,11 +123,16 @@ export function Layout() {
                   }
                 >
                   <HelpCircle size={16} className={location.pathname === '/guide' ? 'text-sky-400' : 'text-slate-500 group-hover:text-slate-300'} />
-                  <span>帮助指南</span>
+                  <span>{t('nav_guide')}</span>
                 </NavLink>
               </div>
             </div>
           </nav>
+
+          {/* Language switcher at bottom */}
+          <div className="px-3 pb-3">
+            <LanguageSwitcher />
+          </div>
         </div>
       </aside>
 
