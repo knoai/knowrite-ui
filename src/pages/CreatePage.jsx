@@ -10,7 +10,6 @@ import { useWork } from '../contexts/WorkContext';
 import { useToast } from '../components/ui/Toast';
 import { useI18n } from '../contexts/I18nContext';
 import * as api from '../api/novel';
-import { useI18n } from '../contexts/I18nContext';
 
 export function CreatePage() {
   const { t } = useI18n();
@@ -27,7 +26,6 @@ export function CreatePage() {
     { key: 'industrial', label: t('label_industrial'), icon: Factory, desc: t('desc_strict_mass'), sub: t('sub_8_rules'), color: 'slate' },
     { key: 'free', label: t('label_free'), icon: Palette, desc: t('desc_creative'), sub: t('sub_2_rules'), color: 'violet' },
   ];
-  const { t } = useI18n();
   const navigate = useNavigate();
   const { refreshWorks } = useWork();
   const { addToast } = useToast();

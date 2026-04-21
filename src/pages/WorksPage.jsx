@@ -20,7 +20,6 @@ import { CharacterPanel } from '../components/world/CharacterPanel';
 import { PlotLinePanel } from '../components/world/PlotLinePanel';
 import { MapPanel } from '../components/world/MapPanel';
 import { TemplatePanel } from '../components/world/TemplatePanel';
-import { useI18n } from '../contexts/I18nContext';
 
 export function WorksPage() {
   const { t } = useI18n();
@@ -52,7 +51,6 @@ export function WorksPage() {
       ],
     },
   ];
-  const { t } = useI18n();
   const { workId } = useParams();
   const navigate = useNavigate();
   const {
@@ -532,8 +530,7 @@ export function WorksPage() {
                 <div className="bg-slate-900/30 border border-slate-800/50 rounded-xl p-4">
                   <div className="text-xs text-slate-500 mb-2">{t('t_dz7q6g')}</div>
                   <div className="text-sm text-slate-300 leading-relaxed max-h-[400px] overflow-y-auto">
-                    <MarkdownRenderer text={(info?.fullText || '').substring(0, 3000) + ((info?.fullText?.length || 0) > 3000 ? '\n\n... (内容过长已截断，请{t('btn_export')}查看完整内容) ...' : '')} />
-                  </div>
+                    <MarkdownRenderer text={(info?.fullText || '').substring(0, 3000) + ((info?.fullText?.length || 0) > 3000 ? '\n\n... (内容过长已截断，请导出查看完整内容) ...' : '')} />\n                  </div>
                 </div>
               </div>
             )}

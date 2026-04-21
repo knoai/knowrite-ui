@@ -1,10 +1,13 @@
+import { t, getStoredLang, zh } from '../i18n';
+const $t = (key, vars) => t(key, getStoredLang(), vars);
+
 const API_BASE = '';
 
 export async function getWorks() {
   const res = await fetch(`${API_BASE}/api/novel/works`);
   if (!res.ok) {
     const errText = await res.text();
-    throw new Error(`服务器错误 (${res.status}): ${errText || '未知错误'}`);
+    throw new Error($t('api_error_server', { status: res.status, message: errText || $t('api_error_unknown') }));
   }
   return res.json();
 }
@@ -426,25 +429,25 @@ async function postStream(url, body, onChunk, signal, onEvent) {
         if (ev.type === 'stepStart' && onEvent) onEvent({ type: 'stepStart', step: ev.step, name: ev.name, model: ev.model });
         if (ev.type === 'stepEnd') {
           if (onEvent) onEvent({ type: 'stepEnd', step: ev.step });
-          onChunk(`\n\n--- ${ev.step} 完成 ---\n\n`);
+          onChunk(`\n\n--- ${ev.step} ${$t('label_complete')} ---\n\n`);
         }
         if (ev.type === 'done') {
           if (onEvent) onEvent({ type: 'done', meta: ev.meta });
-          onChunk('\n\n✅ 全部完成\n');
+          onChunk(`\n\n✅ ${$t('status_all_complete')}\n`);
         }
         if (ev.type === 'error') {
-          const raw = ev.message || '流式响应异常';
-          const isConfig = raw.includes('模型配置') || raw.includes('未配置') || raw.includes('Provider') || raw.includes('baseURL') || raw.includes('apiKey');
-          const isNetwork = raw.includes('网络错误') || raw.includes('ECONNREFUSED') || raw.includes('ENOTFOUND') || raw.includes('ETIMEDOUT');
-          let prefix = '【服务端错误】';
-          if (isConfig) prefix = '【模型配置错误】';
-          if (isNetwork) prefix = '【网络错误】';
+          const raw = ev.message || $t('api_error_stream');
+          const isConfig = raw.includes(zh.label_model_config) || raw.includes(zh.status_not_configured) || raw.includes('Provider') || raw.includes('baseURL') || raw.includes('apiKey');
+          const isNetwork = raw.includes(zh.label_network_error) || raw.includes('ECONNREFUSED') || raw.includes('ENOTFOUND') || raw.includes('ETIMEDOUT');
+          let prefix = $t('prefix_server_error');
+          if (isConfig) prefix = $t('prefix_model_config_error');
+          if (isNetwork) prefix = $t('prefix_network_error');
           const full = `${prefix} ${raw}${ev.context ? ` (${ev.context})` : ''}`;
           if (onEvent) onEvent({ type: 'error', message: full, rawMessage: raw, context: ev.context });
           throw new Error(full);
         }
       } catch (e) {
-        if (e.message === '流式错误' || e.message.includes('流式')) throw e;
+        if (e.message === zh.api_error_streaming || e.message.includes(zh.label_streaming)) throw e;
         // ignore malformed JSON lines
       }
     }

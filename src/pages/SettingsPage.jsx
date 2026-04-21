@@ -5,10 +5,8 @@ import { Input } from '../components/ui/Input';
 import { Textarea } from '../components/ui/Input';
 import * as api from '../api/novel';
 import { useI18n } from '../contexts/I18nContext';
-import { useI18n } from '../contexts/I18nContext';
 
 export function SettingsPage() {
-  const { t } = useI18n();
   const { t } = useI18n();
   const [settings, setSettings] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -1206,7 +1204,7 @@ export function SettingsPage() {
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 {[
                   { key: 'writer', label: '作者（Writer）', desc: '生成初稿' },
-                  { key: 'editor', label: '{t('btn_edit')}（Editor）', desc: '改稿审阅' },
+                  { key: 'editor', label: '编辑（Editor）', desc: '改稿审阅' },
                   { key: 'humanizer', label: '去AI化（Humanizer）', desc: '降低 AI 痕迹' },
                   { key: 'proofreader', label: '校编（Proofreader）', desc: '校对语法和逻辑' },
                   { key: 'reader', label: '读者反馈（Reader）', desc: '模拟读者评审' },

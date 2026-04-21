@@ -6,14 +6,6 @@ import { Button } from '../components/ui/Button';
 import * as api from '../api/novel';
 import { useI18n } from '../contexts/I18nContext';
 
-const BEAT_TYPE_LABELS = {
-  hook: '开篇钩子',
-  rising: '冲突升级',
-  climax: '高潮',
-  falling: '余波回落',
-  suspense: '结尾悬念',
-};
-
 const BEAT_TYPE_COLORS = {
   hook: 'bg-amber-500/10 text-amber-400 border-amber-500/20',
   rising: 'bg-sky-500/10 text-sky-400 border-sky-500/20',
@@ -23,8 +15,8 @@ const BEAT_TYPE_COLORS = {
 };
 
 export function PlanPage() {
-  const { t } = useI18n();
   const [searchParams, setSearchParams] = useSearchParams();
+  const { t } = useI18n();
   const [workId, setWorkId] = useState(searchParams.get('workId') || '');
   const [works, setWorks] = useState([]);
   const [chapterNumber, setChapterNumber] = useState('');
@@ -32,6 +24,14 @@ export function PlanPage() {
   const [plan, setPlan] = useState(null);
   const [streamText, setStreamText] = useState('');
   const [status, setStatus] = useState('');
+
+  const BEAT_TYPE_LABELS = {
+    hook: t('beat_hook'),
+    rising: t('beat_rising'),
+    climax: t('beat_climax'),
+    falling: t('beat_falling'),
+    suspense: t('beat_suspense'),
+  };
 
   useEffect(() => {
     api.getWorks().then((data) => {
@@ -49,12 +49,12 @@ export function PlanPage() {
     setPlanning(true);
     setPlan(null);
     setStreamText('');
-    setStatus('正在生成本章节拍规划...');
+    setStatus(t('status_generating_plan'));
     const controller = new AbortController();
     try {
       await fetchPlanSSE(controller);
     } catch (e) {
-      if (e.name !== 'AbortError') setStatus('错误: ' + e.message);
+      if (e.name !== 'AbortError') setStatus(t('label_error') + ': ' + e.message);
     } finally {
       setPlanning(false);
     }
@@ -84,7 +84,7 @@ export function PlanPage() {
         try {
           const ev = JSON.parse(dataStr);
           if (ev.type === 'chunk' && ev.chunk) {
-            setStreamText((t) => t + ev.chunk);
+            setStreamText((prev) => prev + ev.chunk);
           }
           if (ev.type === 'plan') {
             setPlan({
@@ -92,10 +92,10 @@ export function PlanPage() {
               overallTone: ev.overallTone || '',
               riskFlags: ev.riskFlags || [],
             });
-            setStatus('节拍规划完成');
+            setStatus(t('status_plan_complete'));
           }
           if (ev.type === 'stepStart') {
-            setStatus(`正在执行: ${ev.name}`);
+            setStatus(`${t('status_executing')}: ${ev.name}`);
           }
         } catch {
           // ignore malformed json
@@ -110,38 +110,38 @@ export function PlanPage() {
     <div className="max-w-4xl mx-auto space-y-5">
       <div className="flex items-center gap-3">
         <Lightbulb size={22} className="text-amber-400" />
-        <h1 className="text-xl font-bold text-slate-100">{t('t_71rx2z')}</h1>
+        <h1 className="text-xl font-bold text-slate-100">{t('page_plan_title')}</h1>
       </div>
 
       <Card>
         <div className="flex flex-col sm:flex-row gap-3 items-start sm:items-end">
           <div className="flex-1 w-full">
-            <label className="block text-xs text-slate-500 mb-1">{t('t_dyp1')}</label>
+            <label className="block text-xs text-slate-500 mb-1">{t('label_work')}</label>
             <select
               value={workId}
               onChange={(e) => setWorkId(e.target.value)}
               className="w-full bg-slate-900 border border-slate-700 text-slate-200 text-sm rounded-lg px-3 py-2"
             >
-              <option value="">{t('t_ikvtut')}</option>
+              <option value="">{t('placeholder_select_work')}</option>
               {works.map((w) => (
                 <option key={w.workId} value={w.workId}>{w.title || w.topic || w.workId}</option>
               ))}
             </select>
           </div>
           <div className="w-32">
-            <label className="block text-xs text-slate-500 mb-1">{t('t_imkr9')}</label>
+            <label className="block text-xs text-slate-500 mb-1">{t('label_chapter_number_optional')}</label>
             <input
               type="number"
               min={1}
               value={chapterNumber}
               onChange={(e) => setChapterNumber(e.target.value)}
-              placeholder={t("t_mjum")}
+              placeholder={t('placeholder_auto')}
               className="w-full bg-slate-900 border border-slate-700 text-slate-200 text-sm rounded-lg px-3 py-2"
             />
           </div>
           <Button onClick={handlePlan} disabled={planning || !workId}>
             {planning ? <Loader2 size={15} className="mr-1.5 animate-spin" /> : <Lightbulb size={15} className="mr-1.5" />}
-            {planning ? '规划中...' : '生成节拍规划'}
+            {planning ? t('status_planning') : t('btn_generate_plan')}
           </Button>
         </div>
         {status && <div className="mt-2 text-xs text-slate-500">{status}</div>}
@@ -163,7 +163,7 @@ export function PlanPage() {
                   <BookOpen size={18} className="text-amber-400" />
                 </div>
                 <div>
-                  <div className="text-xs text-slate-500">{t('t_d4prl4')}</div>
+                  <div className="text-xs text-slate-500">{t('label_overall_tone')}</div>
                   <div className="text-sm font-medium text-slate-200">{plan.overallTone}</div>
                 </div>
               </Card>
@@ -173,8 +173,8 @@ export function PlanPage() {
                 <Clock size={18} className="text-sky-400" />
               </div>
               <div>
-                <div className="text-xs text-slate-500">{t('t_oxhtu1')}</div>
-                <div className="text-sm font-medium text-slate-200">{totalWords.toLocaleString()} 字</div>
+                <div className="text-xs text-slate-500">{t('label_estimated_total_words')}</div>
+                <div className="text-sm font-medium text-slate-200">{t('label_n_words', { count: totalWords.toLocaleString() })}</div>
               </div>
             </Card>
           </div>
@@ -190,7 +190,7 @@ export function PlanPage() {
                   <div className="flex-1 min-w-0">
                     <div className="text-sm text-slate-200 leading-relaxed">{beat.description}</div>
                     <div className="flex items-center gap-3 mt-2 text-[10px] text-slate-500">
-                      <span>预计 {beat.estimatedWords || '?'} 字</span>
+                      <span>{t('label_estimated_words', { count: beat.estimatedWords || '?' })}</span>
                       {beat.mustInclude?.length > 0 && (
                         <span className="flex gap-1 flex-wrap">
                           {beat.mustInclude.map((item, i) => (
@@ -211,7 +211,7 @@ export function PlanPage() {
               <div className="flex items-start gap-2">
                 <AlertTriangle size={16} className="text-amber-400 shrink-0 mt-0.5" />
                 <div>
-                  <div className="text-sm font-medium text-amber-400 mb-1">{t('t_jwcjyd')}</div>
+                  <div className="text-sm font-medium text-amber-400 mb-1">{t('title_risk_warnings')}</div>
                   <ul className="space-y-1">
                     {plan.riskFlags.map((flag, i) => (
                       <li key={i} className="text-xs text-slate-400">• {flag}</li>
@@ -225,11 +225,11 @@ export function PlanPage() {
           {/* 确认操作 */}
           <div className="flex justify-end gap-3">
             <Button variant="secondary" onClick={() => { setPlan(null); setStreamText(''); }}>
-              重新规划
+              {t('btn_replan')}
             </Button>
             <Button onClick={() => { window.location.href = `/works/${workId}`; }}>
               <Play size={15} className="mr-1.5" />
-              确认并前往续写
+              {t('btn_confirm_and_continue')}
             </Button>
           </div>
         </>

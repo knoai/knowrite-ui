@@ -6,8 +6,8 @@ import * as api from '../api/novel';
 import { useI18n } from '../contexts/I18nContext';
 
 export function MemoryPage() {
-  const { t } = useI18n();
   const { workId } = useParams();
+  const { t } = useI18n();
   const [loading, setLoading] = useState(true);
   const [voiceFps, setVoiceFps] = useState([]);
   const [memories, setMemories] = useState([]);
@@ -54,7 +54,7 @@ export function MemoryPage() {
     return (
       <div className="flex items-center gap-2 text-slate-400 text-sm py-8">
         <span className="inline-block w-4 h-4 border-2 border-slate-600 border-t-sky-400 rounded-full animate-spin" />
-        加载记忆数据...
+        {t('status_loading_memory')}
       </div>
     );
   }
@@ -62,9 +62,9 @@ export function MemoryPage() {
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
-        <h2 className="text-lg font-bold text-slate-100">{t('t_i0wlp6')}</h2>
+        <h2 className="text-lg font-bold text-slate-100">{t('page_memory_title')}</h2>
         <Button variant="ghost" size="sm" onClick={handleRefresh} disabled={refreshing}>
-          {refreshing ? '刷新中...' : '刷新记忆'}
+          {refreshing ? t('status_refreshing') : t('btn_refresh_memory')}
         </Button>
       </div>
 
@@ -77,42 +77,42 @@ export function MemoryPage() {
       {/* 声纹指纹 */}
       <Card>
         <CardHeader>
-          <CardTitle className="text-base">{t('t_11epkaj')}</CardTitle>
-          <p className="text-xs text-slate-500 mt-1">{t('t_ovffp7')}</p>
+          <CardTitle className="text-base">{t('title_voice_fingerprints')}</CardTitle>
+          <p className="text-xs text-slate-500 mt-1">{t('desc_voice_fingerprints')}</p>
         </CardHeader>
         <div className="px-4 pb-4">
           {voiceFps.length === 0 ? (
-            <div className="text-sm text-slate-500 py-4">{t('t_mjum')}</div>
+            <div className="text-sm text-slate-500 py-4">{t('empty_voice_fingerprints')}</div>
           ) : (
             <div className="space-y-3">
               {voiceFps.map((fp) => (
                 <div key={fp.characterName} className="bg-slate-800/50 rounded-lg p-4 border border-slate-700/40">
                   <div className="flex items-center justify-between mb-2">
                     <span className="text-sm font-semibold text-sky-400">{fp.characterName}</span>
-                    <span className="text-xs text-slate-500">基于 {fp.chapterCount || '?'} 章</span>
+                    <span className="text-xs text-slate-500">{t('label_based_on_chapters', { count: fp.chapterCount || '?' })}</span>
                   </div>
                   <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-xs">
                     {fp.avgSentenceLength && (
                       <div className="bg-slate-900 rounded px-2 py-1">
-                        <span className="text-slate-500">{t('t_ca26pa')}</span>
+                        <span className="text-slate-500">{t('label_avg_sentence_length')}</span>
                         <span className="text-slate-200 ml-1">{fp.avgSentenceLength.toFixed(1)}</span>
                       </div>
                     )}
                     {fp.dialogueRatio !== undefined && (
                       <div className="bg-slate-900 rounded px-2 py-1">
-                        <span className="text-slate-500">{t('t_c6ibug')}</span>
+                        <span className="text-slate-500">{t('label_dialogue_ratio')}</span>
                         <span className="text-slate-200 ml-1">{(fp.dialogueRatio * 100).toFixed(1)}%</span>
                       </div>
                     )}
                     {fp.vocabularyRichness && (
                       <div className="bg-slate-900 rounded px-2 py-1">
-                        <span className="text-slate-500">{t('t_7n3zkg')}</span>
+                        <span className="text-slate-500">{t('label_vocab_richness')}</span>
                         <span className="text-slate-200 ml-1">{fp.vocabularyRichness.toFixed(3)}</span>
                       </div>
                     )}
                     {fp.emotionIntensity && (
                       <div className="bg-slate-900 rounded px-2 py-1">
-                        <span className="text-slate-500">{t('t_cm302u')}</span>
+                        <span className="text-slate-500">{t('label_emotion_intensity')}</span>
                         <span className="text-slate-200 ml-1">{fp.emotionIntensity.toFixed(2)}</span>
                       </div>
                     )}
@@ -136,27 +136,27 @@ export function MemoryPage() {
       {/* 角色记忆 */}
       <Card>
         <CardHeader>
-          <CardTitle className="text-base">{t('_episodic_')}</CardTitle>
-          <p className="text-xs text-slate-500 mt-1">{t('t_o5pc')}</p>
+          <CardTitle className="text-base">{t('title_character_memories')}</CardTitle>
+          <p className="text-xs text-slate-500 mt-1">{t('desc_character_memories')}</p>
         </CardHeader>
         <div className="px-4 pb-4">
           {memories.length === 0 ? (
-            <div className="text-sm text-slate-500 py-4">{t('t_o5pc')}</div>
+            <div className="text-sm text-slate-500 py-4">{t('empty_character_memories')}</div>
           ) : (
             <div className="space-y-3">
               {memories.map((m, idx) => (
                 <div key={idx} className="bg-slate-800/50 rounded-lg p-4 border border-slate-700/40">
                   <div className="flex items-center justify-between mb-1">
                     <span className="text-sm font-semibold text-emerald-400">{m.charName}</span>
-                    <span className="text-xs text-slate-500">第 {m.chapterRange} 章</span>
+                    <span className="text-xs text-slate-500">{t('label_chapter_range', { range: m.chapterRange })}</span>
                   </div>
-                  <div className="text-xs text-slate-400 mb-1">{t('t_lnjk')}</div>
+                  <div className="text-xs text-slate-400 mb-1">{t('label_type')}: {m.episodeType}</div>
                   <div className="text-sm text-slate-300 whitespace-pre-wrap">{m.content}</div>
                   {m.tags && m.tags.length > 0 && (
                     <div className="mt-2 flex flex-wrap gap-1">
-                      {m.tags.map((t, i) => (
+                      {m.tags.map((tag, i) => (
                         <span key={i} className="text-[10px] px-1.5 py-0.5 rounded-full bg-emerald-500/10 text-emerald-300 border border-emerald-500/20">
-                          {t}
+                          {tag}
                         </span>
                       ))}
                     </div>
@@ -172,8 +172,8 @@ export function MemoryPage() {
       {skill && (
         <Card>
           <CardHeader>
-            <CardTitle className="text-base">{t('t_cyo5oa')}</CardTitle>
-            <p className="text-xs text-slate-500 mt-1">{t('t_ebc3')}</p>
+            <CardTitle className="text-base">{t('title_skill_injection')}</CardTitle>
+            <p className="text-xs text-slate-500 mt-1">{t('desc_skill_injection')}</p>
           </CardHeader>
           <div className="px-4 pb-4">
             <div className="bg-slate-800/50 rounded-lg p-4 border border-slate-700/40">

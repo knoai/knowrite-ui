@@ -3,12 +3,12 @@ import { Card, CardHeader, CardTitle } from '../components/ui/Card';
 import { Button } from '../components/ui/Button';
 import { Textarea } from '../components/ui/Input';
 import { useWork } from '../contexts/WorkContext';
-import * as api from '../api/novel';
 import { useI18n } from '../contexts/I18nContext';
+import * as api from '../api/novel';
 
 export function DeconstructPage() {
-  const { t } = useI18n();
   const { refreshWorks } = useWork();
+  const { t } = useI18n();
   const [text, setText] = useState('');
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState(null);
@@ -74,9 +74,9 @@ export function DeconstructPage() {
     <div className="space-y-4">
       <Card>
         <CardHeader>
-          <CardTitle className="text-base">{t('t_csdn6y')}</CardTitle>
+          <CardTitle className="text-base">{t('page_deconstruct_title')}</CardTitle>
           <p className="text-xs text-slate-500 mt-1">
-            粘贴或上传一本小说，AI 将自动分析其情节结构、角色设定、文风指纹、世界观规则和节奏模式，生成可复用的创作模板。
+            {t('page_deconstruct_desc')}
           </p>
         </CardHeader>
 
@@ -85,16 +85,16 @@ export function DeconstructPage() {
             <label className="cursor-pointer">
               <input type="file" accept=".txt,.md" className="hidden" onChange={handleFileUpload} />
               <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-slate-800 border border-slate-700 text-sm text-slate-300 hover:bg-slate-700 transition-colors">
-                📄 上传文件
+                {t('btn_upload_file')}
               </span>
             </label>
-            <span className="text-xs text-slate-500">{t('_txt_md__3_30_')}</span>
+            <span className="text-xs text-slate-500">{t('hint_file_format')}</span>
           </div>
 
           <Textarea
             value={text}
             onChange={(e) => setText(e.target.value)}
-            placeholder={t("t_1nij8yb")}
+            placeholder={t('placeholder_paste_novel')}
             rows={10}
             className="text-sm font-mono"
           />
@@ -114,12 +114,12 @@ export function DeconstructPage() {
               {loading ? (
                 <span className="flex items-center gap-2">
                   <span className="inline-block w-4 h-4 border-2 border-slate-600 border-t-sky-400 rounded-full animate-spin" />
-                  分析中...
+                  {t('status_analyzing')}
                 </span>
-              ) : '开始拆书'}
+              ) : t('btn_start_deconstruct')}
             </Button>
             <Button variant="ghost" onClick={() => { setText(''); setResult(null); setError(''); }} disabled={loading}>
-              清空
+              {t('btn_clear')}
             </Button>
           </div>
         </div>
@@ -129,26 +129,26 @@ export function DeconstructPage() {
       {result && (
         <Card>
           <CardHeader>
-            <CardTitle className="text-base">{t('t_as7ylv')}</CardTitle>
+            <CardTitle className="text-base">{t('title_analysis_result')}</CardTitle>
           </CardHeader>
           <div className="px-4 pb-4 space-y-3">
-            {renderSection('情节结构', result.plotStructure)}
-            {renderSection('角色原型', result.characters)}
-            {renderSection('文风指纹', result.styleFingerprint)}
-            {renderSection('世界观规则', result.worldRules)}
-            {renderSection('节奏模式', result.pacingPatterns)}
+            {renderSection(t('label_plot_structure'), result.plotStructure)}
+            {renderSection(t('label_character_archetype'), result.characters)}
+            {renderSection(t('label_style_fingerprint'), result.styleFingerprint)}
+            {renderSection(t('label_world_rules'), result.worldRules)}
+            {renderSection(t('label_pacing_pattern'), result.pacingPatterns)}
             {result.artifacts && (
               <div className="bg-emerald-500/10 border border-emerald-500/20 rounded-lg p-4">
-                <h3 className="text-sm font-semibold text-emerald-400 mb-2">{t('t_f8y5ze')}</h3>
+                <h3 className="text-sm font-semibold text-emerald-400 mb-2">{t('title_reusable_resources')}</h3>
                 <div className="space-y-2 text-sm text-slate-300">
                   {result.artifacts.template && (
-                    <div>{t('t_kgk1')}<span className="text-emerald-300">{result.artifacts.template.name}</span></div>
+                    <div>{t('msg_template_generated')}<span className="text-emerald-300">{result.artifacts.template.name}</span></div>
                   )}
                   {result.artifacts.style && (
-                    <div>{t('t_e78p')}<span className="text-emerald-300">{result.artifacts.style.name}</span></div>
+                    <div>{t('msg_voice_extracted')}<span className="text-emerald-300">{result.artifacts.style.name}</span></div>
                   )}
                   {result.artifacts.prompts && (
-                    <div>✅ 提示词模板已创建: <span className="text-emerald-300">{result.artifacts.prompts.length} 个</span></div>
+                    <div>{t('msg_prompt_created')}<span className="text-emerald-300">{t('label_n_items', { count: result.artifacts.prompts.length })}</span></div>
                   )}
                 </div>
               </div>
@@ -161,7 +161,7 @@ export function DeconstructPage() {
       {history.length > 0 && (
         <Card>
           <CardHeader>
-            <CardTitle className="text-base">{t('t_aw7utt')}</CardTitle>
+            <CardTitle className="text-base">{t('title_history')}</CardTitle>
           </CardHeader>
           <div className="px-4 pb-4">
             <div className="space-y-2">
@@ -172,11 +172,11 @@ export function DeconstructPage() {
                   onClick={() => setResult(h.result)}
                 >
                   <div>
-                    <div className="text-sm text-slate-200">{t('t_bt1jz0')}</div>
+                    <div className="text-sm text-slate-200">{h.title || t('label_unnamed_analysis')}</div>
                     <div className="text-xs text-slate-500">{new Date(h.createdAt).toLocaleString()}</div>
                   </div>
                   <div className="text-xs text-slate-500">
-                    {h.result?.artifacts ? '已生成资源' : '纯分析'}
+                    {h.result?.artifacts ? t('status_resources_generated') : t('status_pure_analysis')}
                   </div>
                 </div>
               ))}
