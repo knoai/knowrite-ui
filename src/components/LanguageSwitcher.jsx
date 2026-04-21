@@ -13,7 +13,7 @@ export function LanguageSwitcher() {
         <Globe size={14} />
         <span>{lang === 'zh' ? '中文' : 'EN'}</span>
       </button>
-      <div className="absolute right-0 top-full mt-1 hidden group-hover:block bg-slate-900 border border-slate-700 rounded-lg shadow-lg overflow-hidden min-w-[80px] z-50">
+      <div className="absolute right-0 bottom-full mb-1 hidden group-hover:block bg-slate-900 border border-slate-700 rounded-lg shadow-lg overflow-hidden min-w-[80px] z-50">
         <button
           onClick={() => setLang('en')}
           className={`w-full text-left px-3 py-2 text-xs transition ${lang === 'en' ? 'text-sky-400 bg-sky-500/10' : 'text-slate-300 hover:bg-slate-800'}`}
