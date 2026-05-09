@@ -18,6 +18,14 @@
 
 ---
 
+## 🌐 Remote Experience
+No deployment required, experience online directly:
+
+| Service | Address |
+|---------|---------|
+| 🖥️ Online Demo | http://14.103.155.159:25175/ |
+
+
 AI-driven novel creation visualization workbench — watch 7 Agents collaborate to write a novel in real-time, with Fitness quality scores at a glance and one-click world-building management. Built with React 19 + Vite + Tailwind CSS v4, open-sourced under MIT license.
 
 **Knowrite UI** is the companion frontend for the [`knowrite`](https://github.com/knoai/knowrite) novel writing engine, connecting to the backend via standard HTTP / SSE, zero-config dev environment, ready to use out of the box.
